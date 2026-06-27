@@ -12,7 +12,5 @@ Cargo.lock
 
 # whitelisted doc directory contents
 docs/*
-!docs/tasks
-!docs/tasks/**
-!docs/designs
-!docs/designs/**
+!docs/specs
+!docs/specs/**
