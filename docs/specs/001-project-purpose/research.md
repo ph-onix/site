@@ -131,3 +131,47 @@ The cleanest candidate-trackable signals (from firsthand accounts):
 - **Backend/ML/systems "what works" guidance** leans on one strong named practitioner (systems only), a rich-but-anecdotal HN thread, and commercially-motivated SEO blogs that are internally consistent but not authoritative.
 
 **The intellectually honest bottom line:** build the site if you value the *engineering* of building it (and you should, for the target roles) and want a cheap hub for real artifacts — but **do not expect it to be the thing that lands the internship.** Put the marginal hour into a referral, an OSS contribution, or interview/OA prep if hiring outcome is the only goal.
+
+---
+
+# What clients & hiring managers want answered when evaluating a developer
+
+> Research conducted 2026-06-27 to inform **Priority 2 (converting freelance clients)** in [design.md](./design.md).
+> Scope: client-side / buyer-side evidence on what people who *hire* a software developer or freelancer look for, and the questions they need answered before reaching out — with emphasis on production-grade/backend work.
+
+## Evidence quality note (read first)
+
+The strongest buyer-side evidence is a small set of surveys; much of the rest is hiring-guide/practitioner opinion. Tags below: **[EMPIRICAL]** = survey/platform data; **[OPINION]** = practitioner/hiring-guide assertion.
+
+- **Clutch** — survey of **312 US professionals who have hired B2B service providers** (fielded late 2022 / early 2023). Genuinely buyer-side, methodology disclosed. [clutch.co/resources/b2b-buyer-data](https://clutch.co/resources/b2b-buyer-data)
+- **Influ2** — survey of **50 senior enterprise/mid-market software buyers** (C-level/Director). Small N, explicitly buyer-side. [influ2.com](https://www.influ2.com/blog/enterprise-software-buying-process-survey)
+- The popular circulating stats ("87% prefer portfolios to resumes," "55 seconds to decide," "84% want working apps not repos") are **uncited marketing repetition — treat as [OPINION]**, included only as direction.
+- Academic anchor for first impressions: Stanford Web Credibility work (Fogg et al.), behind the "~75% judge credibility by design" claim.
+
+## Ranked questions clients/hiring managers want answered
+
+1. **"Do you understand MY specific problem/industry?"** — the single best-evidenced concern. Clutch: understanding the client's specific business need was the **#1 deciding factor (~29%)**, just ahead of raw ability to deliver. Buyers mean a *tailored* solution, not a generic skills list. [clutch.co](https://clutch.co/resources/b2b-buyer-data) **[EMPIRICAL]**
+2. **"Can you actually do THIS kind of work?"** — ability to provide the service was the **#2 factor (~28%)**, essentially tied. Buyers look for verified history and prior projects *similar to theirs*, not breadth. [clutch.co](https://clutch.co/resources/b2b-buyer-data) **[EMPIRICAL]** / [index.dev](https://www.index.dev/blog/evaluate-freelance-developer-portfolio) **[OPINION]**
+3. **"What did the work actually achieve?"** — buyers want outcomes mapped to value and *storytelling* (problem → decision → result), not feature lists; "missing metrics/impact" is a rejection trigger. [linkedin.com (hiring-manager content)](https://www.linkedin.com/top-content/recruitment-hr/freelance-hiring-solutions/how-hiring-managers-evaluate-freelance-talent/), [index.dev](https://www.index.dev/blog/evaluate-freelance-developer-portfolio) **[OPINION, hiring-manager-sourced]**
+4. **"How do you think / make decisions?"** — *how* you approach an unfamiliar problem "matters more than existing knowledge"; walking through tradeoffs and lessons-learned is a top shortlisting signal. [linkedin.com](https://www.linkedin.com/top-content/recruitment-hr/freelance-hiring-solutions/how-hiring-managers-evaluate-freelance-talent/) **[OPINION, hiring-manager-sourced]**
+5. **"Will you communicate and deliver reliably — and not disappear?"** — communication/responsiveness is a top non-technical screen; slow/vague response is a leading red flag ("they won't get more responsive after you pay"). [prologica.ai](https://www.prologica.ai/blog/what-are-the-warning-signs-of-a-bad-software-developer) **[OPINION]**
+6. **"Is the work credible and low-risk?"** — for technical buyers: viewable **code samples**, **tests + CI**, **README/docs**, sane architecture. Strongest stated red flag: *"if a developer cannot provide code samples, that is a serious warning sign"*; "no testing practices = risky." [index.dev](https://www.index.dev/blog/evaluate-freelance-developer-portfolio), [prologica.ai](https://www.prologica.ai/blog/what-are-the-warning-signs-of-a-bad-software-developer) **[OPINION, hiring-manager-sourced]**
+7. **"Can I trust your reputation / what proof exists?"** — reviews matter in B2B: Clutch reports **~47% of businesses read 6+ reviews** before deciding; refusal to give references is a red flag. Precisely the signal a first-timer lacks (see trust-substitutes). [clutch.co](https://clutch.co/resources/b2b-buyer-data) **[EMPIRICAL for review counts]**
+8. **"What will it cost / how is payment & risk structured?"** — buyers distrust fixed quotes given before requirements are understood and large upfront payments ("tie payments to milestones"). [prologica.ai](https://www.prologica.ai/blog/what-are-the-warning-signs-of-a-bad-software-developer) **[OPINION]** — *deliberately kept off the site per the show-don't-sell stance; belongs in a first conversation.*
+9. **"Are you legit at a glance (professional presentation)?"** — Stanford: **~75% judge credibility by website design**; "sketchy"/no-photo profiles are rejected. [moststudios.com](https://moststudios.com/learn/how-web-design-shapes-user-trust-and-credibility/) **[EMPIRICAL underlying study]** / [upwork.com](https://www.upwork.com/hire/software-developers/) **[OPINION]**
+
+## First-client trust signals (substitutes for testimonials)
+
+For a freelancer with **no testimonials**, consistent (mostly **[OPINION]**) substitutes: a small-but-relevant portfolio (relevance > volume); a visible **diagnosis of the client's problem** (early proof of thinking, converts better than free work); **inspectable artifacts** (code samples, clean GitHub with READMEs/tests/CI, decision write-ups); honesty about scope/limits; professional presentation. One **[EMPIRICAL, small N]** addition: Influ2 found **70% said helpful content addressing real problems is what stands out most** and **64% cited peer word-of-mouth**. [forbesceos.com](https://www.forbesceos.com/how-new-freelancers-can-build-trust-and-credibility-quickly/), [index.dev](https://www.index.dev/blog/evaluate-freelance-developer-portfolio), [influ2.com](https://www.influ2.com/blog/enterprise-software-buying-process-survey)
+
+## Technical/production-grade vs generic-gig differences
+
+- **Generic web/design gigs** are judged heavily on **visual polish** and first-impression design — appearance *is* much of the signal. **[OPINION]**
+- **Production-grade backend/systems work** shifts the questions to **operational competence**: monitoring/observability, CI/CD + deploy strategy (blue-green/canary), safe schema migrations, scaling (caching/sharding/load balancing), incident/on-call, IaC/containers. Red flag: *"no monitoring mindset / ignores scale."* [recruiter.daily.dev](https://recruiter.daily.dev/resources/hiring-backend-developer-complete-checklist/), [terminal.io](https://www.terminal.io/blog/15-backend-developer-interview-questions-for-hiring-backend-engineers) **[OPINION]**
+- For technical buyers, **code-quality/testing/architecture evidence becomes a gate**; for design gigs it is largely irrelevant.
+- Enterprise/production buying adds **security/procurement gatekeepers**: Influ2 — **38% said IT/Security raises the biggest objections**, **20% cited security concerns as a decision delay**. [influ2.com](https://www.influ2.com/blog/enterprise-software-buying-process-survey) **[EMPIRICAL, small N]**
+- **Honest caveat:** no controlled study directly compares buyer criteria for "infra/backend" vs "design" freelancers — the contrast is synthesized from separate sources and is directional, not proven.
+
+## Bottom line — core questions to validate the site's information architecture
+
+Ranked by evidence strength: (1) *do you understand my problem?* [EMPIRICAL #1], (2) *can you do THIS work?* [EMPIRICAL #2], (3) *what outcome did it produce?*, (4) *how do you think/decide?*, (5) *is the work credible/low-risk?* (code, tests, docs; for infra: monitoring/deploy/scale/security), (6) *will you communicate/deliver reliably?*, (7) *what proof/reputation exists?* (first-timer substitutes), (8) *cost & risk structure* (kept off-site by design). Answering #1–#6 through the work itself, with #7 via substitutes, maps onto the best-supported buyer concerns. The weakest-evidenced items (specialist-vs-generalist, exact first-impression timing, the uncited "87%/84%" stats) should not be over-weighted.
