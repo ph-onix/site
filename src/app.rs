@@ -1,3 +1,4 @@
+use crate::components::Hero;
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
@@ -33,11 +34,11 @@ pub fn App() -> impl IntoView {
         // id=leptos means cargo-leptos will hot-reload this stylesheet
         <Stylesheet id="leptos" href="/pkg/site.css"/>
 
-        <Title text="ph-onix"/>
+        <Title text="title"/>
         <Router>
             <main>
                 <Routes fallback=|| "Page not found.".into_view()>
-                    <Route path=StaticSegment("") view=HomePage/>
+                    <Route path=StaticSegment("") view=Home/>
                 </Routes>
             </main>
         </Router>
@@ -45,8 +46,8 @@ pub fn App() -> impl IntoView {
 }
 
 #[component]
-fn HomePage() -> impl IntoView {
+fn Home() -> impl IntoView {
     view! {
-        <h1>"Welcome."</h1>
+        <Hero />
     }
 }
