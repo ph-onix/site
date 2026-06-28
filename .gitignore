@@ -14,3 +14,5 @@ Cargo.lock
 docs/*
 !docs/specs
 !docs/specs/**
+
+.claude*
