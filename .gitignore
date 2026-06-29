@@ -16,3 +16,6 @@ docs/*
 !docs/specs/**
 
 .claude*
+PRODUCT.md
+DESIGN.md
+.impeccable

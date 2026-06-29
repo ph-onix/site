@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>002 · Hero — masthead on the well plane</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── tokens — verbatim from palette v1.3.7 (subset used here) ── */
+  :root {
+    --well:#141414; --bg:#171717; --surface-1:#1c1c1c; --surface-2:#202020; --surface-3:#262626;
+    --border:#2e2e2e; --border-strong:#363636; --border-disabled:#242424;
+    --fg:#ededed; --icon:#d8d8d8; --fg-muted:#b3b3b3; --fg-subtle:#8f8f8f; --fg-disabled:#555555;
+    --pg:#6fbbf0;
+    --font-vercel:"Geist", sans-serif; --font-mono:"Geist Mono", monospace;
+    --r-md:8px; --r-lg:12px; --r-pill:999px;
+    --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;  /* s7/s8: layout-scale extension */
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  ::selection { background:rgba(237,237,237,0.16); }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font-vercel); line-height:1.5; -webkit-font-smoothing:antialiased; min-height:100vh; }
+
+  /* shared max-width container with consistent horizontal padding (full-bleed bands carry their own bg) */
+  .wrap { max-width:1120px; margin:0 auto; padding-inline:var(--s3); }
+
+  /* page chrome — labels the mock (NOT a section eyebrow) */
+  .mock-label { font-family:var(--font-mono); font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--fg-subtle); padding:var(--s4) 0; }
+
+  /* ── P7 HERO — functional masthead on the recessed well plane ──
+     the hero is the darkest plane (#141414); the canvas below (#171717) is lighter,
+     so the project cards visibly rise out of it. the bottom hairline is the
+     background separation line that splits the well masthead from the canvas. */
+  /* masthead row: text left, interactive terminal right (stacks on narrow) */
+  .hero { position:relative; background:var(--well); border-bottom:1px solid var(--border);
+          display:flex; align-items:center; min-height:300px; }
+  .hero .wrap { width:100%; padding-block:var(--s7);
+                display:grid; grid-template-columns:1fr 440px; align-items:center; gap:var(--s7); }
+  .hero-title { font-size:clamp(24px, 4vw, 30px); font-weight:600; letter-spacing:-0.02em; color:var(--fg); text-wrap:balance; }
+  .hero-desc { margin-top:var(--s4); max-width:54ch; font-size:clamp(14px, 1.6vw, 16px); line-height:1.6; color:var(--fg-muted); text-wrap:pretty; }
+
+  /* ── interactive terminal — a raised console floating across the seam ──
+     440×416, slightly rounded; hangs ~90px below the dividing hairline onto the canvas (z-index above it). */
+  .term { width:440px; height:416px; margin-bottom:-140px; position:relative; z-index:2;
+          display:flex; flex-direction:column; background:var(--surface-1);
+          border:1px solid var(--border); border-radius:var(--r-md); overflow:hidden; }
+  .term-body { flex:1; font-family:var(--font-mono); font-size:14px;
+               line-height:1.7; color:var(--fg); display:flex; flex-direction:column; }
+  /* warp-style command blocks: each command + its output, separated by a hairline */
+  .t-block { padding:var(--s3) var(--s4); display:flex; flex-direction:column; gap:var(--s2); }
+  .t-block + .t-block { border-top:1px solid var(--border); }
+  .t-cmd { color:var(--fg-muted); }
+  .t-out { color:var(--fg); }
+  .t-row { display:flex; gap:var(--s4); }
+  .t-key { width:104px; flex-shrink:0; color:var(--fg-muted); }
+  .t-val { color:var(--fg); }
+  .t-val a { color:var(--fg); text-decoration:none; border-bottom:1px solid var(--fg-subtle); transition:border-color 0.15s ease; }
+  .t-val a:hover { border-color:var(--fg); }
+  .sigil { color:var(--fg-muted); margin-right:8px; }
+  /* prompt line — focusable & typeable; command handling wired later */
+  .t-promptline { flex-direction:row; align-items:center; gap:0; cursor:text; }
+  .t-input { flex:1; min-width:0; background:transparent; border:0; outline:none; padding:0; font:inherit; color:var(--fg); caret-color:var(--fg); }
+  .t-caret { flex-shrink:0; width:8px; height:1.05em; background:var(--fg); animation:blink 1.1s steps(1,end) 3; }
+  .t-promptline:focus-within .t-caret { opacity:0; }
+  @keyframes blink { 50% { opacity:0; } }
+  @media (prefers-reduced-motion: reduce) { .t-caret { animation:none; } }
+
+  /* narrow viewports: terminal drops below the text, no seam overhang */
+  @media (max-width:860px) {
+    .hero .wrap { grid-template-columns:1fr; align-items:start; gap:var(--s6); }
+    .term { width:100%; max-width:440px; margin-bottom:0; }
+  }
+
+</style>
+</head>
+<body>
+
+  <div class="wrap"><div class="mock-label">002 · Hero — masthead on the well plane</div></div>
+
+  <!-- ── P7 · hero masthead (well plane) ── -->
+  <header class="hero">
+    <div class="wrap">
+      <div class="hero-text">
+        <h1 class="hero-title">Project Documentation</h1>
+        <p class="hero-desc">Backend and low-level systems projects, documented in public — the architecture decisions, shipping cadence, and live demos behind each one.</p>
+      </div>
+
+      <!-- interactive terminal — default ls -l view (contact + last-commit), typeable prompt (commands wired later) -->
+      <div class="term" aria-label="terminal">
+        <div class="term-body">
+          <div class="t-block">
+            <div class="t-cmd"><span class="sigil">$</span>whoami</div>
+            <div class="t-out">backend &amp; systems engineer</div>
+          </div>
+          <div class="t-block">
+            <div class="t-cmd"><span class="sigil">$</span>ls -l</div>
+            <div class="t-row"><span class="t-key">contact</span><span class="t-val"><a href="mailto:hello@ph.dev">hello@ph.dev</a></span></div>
+            <div class="t-row"><span class="t-key">last-commit</span><span class="t-val">2d ago</span></div>
+          </div>
+          <label class="t-block t-promptline">
+            <span class="sigil">$</span>
+            <span class="t-caret" aria-hidden="true"></span>
+            <input class="t-input" type="text" aria-label="terminal input — commands coming soon" autocomplete="off" spellcheck="false">
+          </label>
+        </div>
+      </div>
+    </div>
+  </header>
+
+</body>
+</html>

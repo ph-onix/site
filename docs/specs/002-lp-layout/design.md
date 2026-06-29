@@ -17,11 +17,7 @@ inner-page surface is not specified.
 
 **The progression dual-form principle (cross-cutting).** A progression entity is
 defined by *both* a **glance form** and a **depth form**. Context selects the
-*form*, not the *presence*: every progression signal appears both on the landing
-card (glance form) and on the project page (depth form). Consequently we do not
-pre-cut which signals the card carries — all glance forms stay available, and the
-mock-and-critique loop decides empirically which forms, combinations, and layouts
-read as uncrowded against real pixels.
+*form*, not the *presence*.
 
 ---
 
@@ -36,9 +32,9 @@ wrong and no amount of surrounding polish recovers it.
 
 **Form (known)**: A specialization of the large card (Priority 10) — bordered,
 padded, rounded panel, icon + title on the top row, description below — *plus* a
-**progression summary** composing the glance forms of Priority 2–4. The entire
-card is the link target into the project home (FR-021); the progression summary
-deep-links into the corresponding region.
+**progression summary** composing the glance forms of permutation of Priority 2–4. 
+The entire card is the link target into the project home (FR-021); 
+the progression summary deep-links into the corresponding region.
 
 **Constraint — nested deep-links**: the whole card is a single link to the
 project home (FR-009 / FR-021), but progression sub-signals must *also* deep-link
@@ -74,7 +70,7 @@ contribution graph belongs here, on the project page, not on the card).
 the title vs. in the foot band) and whether it carries a pressable affordance
 (see the deep-link constraint under Priority 1).
 
-## Priority 3 — Next-up
+# Priority 3 — Next-up
 
 **Job**: Answers "is this alive / what is he doing now?" — the human, building-in-
 public signal. The one entity that is editorial rather than git-derived.
