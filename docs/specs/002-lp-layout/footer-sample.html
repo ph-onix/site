@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>002 · Footer — compact meta line</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── tokens — verbatim from palette v1.3.7 (subset used here) ── */
+  :root {
+    --well:#141414; --bg:#171717; --surface-1:#1c1c1c; --surface-2:#202020; --surface-3:#262626;
+    --border:#2e2e2e; --border-strong:#363636; --border-disabled:#242424;
+    --fg:#ededed; --icon:#d8d8d8; --fg-muted:#b3b3b3; --fg-subtle:#8f8f8f; --fg-disabled:#555555;
+    --pg:#6fbbf0; --focus:#6fbbf0;
+    --font-vercel:"Geist", sans-serif; --font-mono:"Geist Mono", monospace;
+    --r-md:8px; --r-lg:12px; --r-pill:999px;
+    --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+    --ease-out:cubic-bezier(0.22,1,0.36,1);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  ::selection { background:rgba(237,237,237,0.16); }
+  html { overflow-x:clip; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font-vercel);
+         line-height:1.5; -webkit-font-smoothing:antialiased;
+         min-height:100vh; display:flex; flex-direction:column; }
+
+  .wrap { max-width:1240px; margin:0 auto; padding-inline:var(--s3); }
+
+  /* canvas above — only so the well-plane footer reads as the page's terminus */
+  .page-rest { flex:1; display:flex; align-items:center; justify-content:center; min-height:40vh; }
+  .page-rest span { font-family:var(--font-mono); font-size:12px; letter-spacing:0.08em;
+                    text-transform:uppercase; color:var(--fg-disabled); }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     P9 · FOOTER — compact bottom bezel
+     ────────────────────────────────────────────────────────────────────────
+     A single meta line on the recessed `well` plane (#141414), top hairline to
+     close the stack. Left: copyright + colophon (the "Built with Leptos" link is
+     the systems work-sample tell). Right: contact (email) + GitHub, surfaced
+     (FR-029), never sold. No CTA.
+     ══════════════════════════════════════════════════════════════════════════ */
+  .site-footer { background:var(--well); border-top:1px solid var(--border); }
+  .site-footer .wrap { padding-block:var(--s5); }
+
+  .foot-meta { display:flex; justify-content:space-between; align-items:center; gap:var(--s5); flex-wrap:wrap; }
+
+  /* copyright / colophon line */
+  .copyline { display:inline-flex; align-items:center; gap:var(--s3);
+              font-family:var(--font-vercel); font-size:12px; color:var(--fg-subtle); }
+  .cc-ico { display:inline-flex; }
+  .cc-ico svg { width:11px; height:11px; stroke-width:2; }
+  .copyline .sep { color:inherit; font-size:12px; line-height:16px; }
+  .copy-name { display:inline-flex; align-items:center; gap:3px; }
+  .foot-underline { color:var(--fg-subtle); text-decoration:none; border-radius:4px;
+                    transition:color 0.15s var(--ease-out); }
+  .foot-underline:hover { color:var(--fg); text-decoration:underline; text-underline-offset:3px; }
+  .foot-underline:focus-visible { outline:none; box-shadow:0 0 0 2px var(--well), 0 0 0 4px var(--focus); }
+
+  /* contact (right) — monochrome, muted→white on hover; no CTA */
+  .meta-right { display:flex; align-items:center; gap:var(--s5); }
+  .foot-link { display:inline-flex; align-items:center; gap:6px; color:var(--fg-muted);
+               text-decoration:none; font-size:13px; border-radius:4px; padding:2px 4px; margin:-2px -4px;
+               transition:color 0.15s var(--ease-out); }
+  .foot-link:hover { color:var(--fg); }
+  .foot-link:focus-visible { outline:none; box-shadow:0 0 0 2px var(--well), 0 0 0 4px var(--focus); }
+  .foot-link .ico { display:inline-flex; color:var(--fg-subtle); transition:color 0.15s var(--ease-out); }
+  .foot-link:hover .ico { color:var(--fg); }
+  .foot-link .ico svg { width:15px; height:15px; }
+  .foot-iconlink { display:inline-flex; color:var(--fg-subtle); border-radius:4px; padding:4px;
+                   transition:color 0.15s var(--ease-out); }
+  .foot-iconlink:hover { color:var(--fg); }
+  .foot-iconlink:focus-visible { outline:none; box-shadow:0 0 0 2px var(--well), 0 0 0 4px var(--focus); }
+  .foot-iconlink svg { width:16px; height:16px; }
+
+  @media (prefers-reduced-motion:reduce) {
+    .foot-link, .foot-link .ico, .foot-iconlink, .foot-underline { transition:none; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- canvas above — represents the rest of the page so the footer reads as closure -->
+  <div class="page-rest"><span>… rest of page …</span></div>
+
+  <!-- ── P9 · footer (well plane) ── -->
+  <footer class="site-footer" role="contentinfo" aria-label="Footer">
+    <div class="wrap">
+      <div class="foot-meta">
+
+        <p class="copyline">
+          <span class="copy-name">
+            <span class="cc-ico" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.83 14.83a4 4 0 1 1 0-5.66"/></svg></span>John Doe
+          </span>
+          <span class="sep" aria-hidden="true">—</span>
+          <a class="foot-underline" href="https://leptos.dev" target="_blank" rel="noreferrer noopener">Built With Leptos</a>
+          <a class="foot-underline" href="https://github.com/ph-onix/personal-site" target="_blank" rel="noreferrer noopener">Source</a>
+        </p>
+
+        <div class="meta-right">
+          <a class="foot-link" href="mailto:johndoe@gmail.com">
+            <span class="ico"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></span>
+            johndoe@gmail.com
+          </a>
+          <a class="foot-iconlink" href="https://github.com/ph-onix" target="_blank" rel="noreferrer noopener" aria-label="GitHub">
+            <svg viewBox="0 0 15 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7.49933 0.25C3.49635 0.25 0.25 3.49593 0.25 7.50024C0.25 10.703 2.32715 13.4206 5.2081 14.3797C5.57084 14.446 5.70302 14.2222 5.70302 14.0299C5.70302 13.8576 5.69679 13.4019 5.69323 12.797C3.67661 13.235 3.25112 11.825 3.25112 11.825C2.92132 10.9874 2.44599 10.7644 2.44599 10.7644C1.78773 10.3149 2.49584 10.3238 2.49584 10.3238C3.22353 10.375 3.60629 11.0711 3.60629 11.0711C4.25298 12.1788 5.30335 11.8588 5.71638 11.6732C5.78225 11.205 5.96962 10.8854 6.17658 10.7043C4.56675 10.5209 2.87415 9.89918 2.87415 7.12104C2.87415 6.32925 3.15677 5.68257 3.62053 5.17563C3.54576 4.99226 3.29697 4.25521 3.69174 3.25691C3.69174 3.25691 4.30015 3.06196 5.68522 3.99973C6.26337 3.83906 6.8838 3.75895 7.50022 3.75583C8.1162 3.75895 8.73619 3.83906 9.31523 3.99973C10.6994 3.06196 11.3069 3.25691 11.3069 3.25691C11.7026 4.25521 11.4538 4.99226 11.3795 5.17563C11.8441 5.68257 12.1245 6.32925 12.1245 7.12104C12.1245 9.9063 10.4292 10.5192 8.81452 10.6985C9.07444 10.9224 9.30633 11.3648 9.30633 12.0413C9.30633 13.0102 9.29742 13.7922 9.29742 14.0299C9.29742 14.2239 9.42828 14.4496 9.79591 14.3788C12.6746 13.4179 14.75 10.7025 14.75 7.50024C14.75 3.49593 11.5036 0.25 7.49933 0.25Z" fill-rule="evenodd" clip-rule="evenodd"/></svg>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
