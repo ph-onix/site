@@ -43,8 +43,9 @@
   @media (prefers-reduced-transparency:reduce) { .nav { background:var(--bg); -webkit-backdrop-filter:none; backdrop-filter:none; } }
 
   .crumbs { display:flex; align-items:center; gap:6px; min-width:0; font-family:var(--font-mono); font-size:13px; letter-spacing:0.01em; }
-  .crumbs .sep { color:var(--fg-subtle); font-weight:500; user-select:none; flex-shrink:0; }
-  .prompt { color:var(--fg-subtle); font-weight:500; user-select:none; flex-shrink:0; }
+  /* separators: a drawn 2px hairline seam (rotated thin bar, 18px tall), not the font's slash glyph
+     (the 'B · weight + 3px length' separator variant) */
+  .sep-hair { flex-shrink:0; display:inline-block; width:2px; height:18px; background:var(--border-strong); transform:rotate(18deg); border-radius:1px; margin-inline:2px; }
   .crumb {
     color:var(--fg-muted); text-decoration:underline; text-decoration-thickness:1px;
     text-underline-offset:3px; text-decoration-color:var(--fg-subtle);
@@ -260,8 +261,8 @@
     <nav class="nav" aria-label="Primary">
       <div class="wrap">
         <div class="crumbs" aria-label="Breadcrumb">
-          <span class="prompt" aria-hidden="true">~/</span>
-          <span class="crumb current" aria-current="page">home</span>
+          <span class="sep-hair" aria-hidden="true"></span>
+          <span class="crumb current" aria-current="page">johndoe</span>
         </div>
         <button class="menu-btn" popovertarget="proj-dir" aria-label="Open menu" title="Menu">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>

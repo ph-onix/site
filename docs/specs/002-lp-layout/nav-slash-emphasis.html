@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>002 · nav separator: emphasis ladder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* tokens: palette v1.3.7 (subset), matched to nav-sample.html */
+  :root {
+    --well:#141414; --bg:#171717; --surface-1:#1c1c1c; --surface-2:#202020; --surface-3:#262626;
+    --border:#2e2e2e; --border-strong:#363636; --border-disabled:#242424;
+    --fg:#ededed; --icon:#d8d8d8; --fg-muted:#b3b3b3; --fg-subtle:#8f8f8f; --fg-disabled:#555555;
+    --pg:#6fbbf0; --focus:#6fbbf0;
+    --selection:rgba(237,237,237,0.16); --overlay-hover:rgba(237,237,237,0.06);
+    --font-vercel:"Geist", sans-serif; --font-mono:"Geist Mono", monospace;
+    --r-md:8px; --r-pill:999px;
+    --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
+    --ease-out:cubic-bezier(0.22,1,0.36,1);
+    --nav-h:50px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  ::selection { background:var(--selection); }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font-vercel);
+         line-height:1.5; -webkit-font-smoothing:antialiased; padding-block:var(--s7); }
+  .page { max-width:980px; margin:0 auto; padding-inline:var(--s5); }
+
+  h1 { font-size:24px; font-weight:600; letter-spacing:-0.02em; margin-bottom:var(--s3); }
+  .lede { font-size:15px; line-height:1.6; color:var(--fg-muted); max-width:70ch; margin-bottom:var(--s3); }
+  .lede code, .foot code { font-family:var(--font-mono); font-size:0.92em; color:var(--fg-muted);
+               background:var(--well); border:1px solid var(--border); border-radius:var(--r-md); padding:1px 5px; }
+  .swatches { display:flex; gap:var(--s4); flex-wrap:wrap; margin-bottom:var(--s7); font-family:var(--font-mono); font-size:11px; color:var(--fg-subtle); }
+  .sw { display:inline-flex; align-items:center; gap:6px; }
+  .sw i { width:11px; height:11px; border-radius:2px; display:inline-block; }
+
+  .spec { margin-bottom:var(--s5); }
+  .spec-label { display:flex; align-items:baseline; gap:var(--s3); margin-bottom:var(--s2); flex-wrap:wrap; }
+  .spec-name { font-size:13px; font-weight:600; color:var(--fg); }
+  .spec-tag { font-family:var(--font-mono); font-size:11px; letter-spacing:0.02em; color:var(--fg-subtle); }
+  .rec { color:var(--pg); }
+  .spec-str { font-size:13px; line-height:1.55; color:var(--fg-subtle); max-width:66ch; margin-top:var(--s2); }
+
+  /* bar mimics the real nav plane (#171717 canvas + hairline) */
+  .bar { width:100%; height:var(--nav-h);
+         background:var(--bg); border:1px solid var(--border); border-radius:var(--r-md); }
+  .bar-inner { height:100%; display:flex; align-items:center; justify-content:space-between; gap:var(--s5); padding-inline:var(--s4); }
+
+  .crumbs { display:flex; align-items:center; gap:6px; min-width:0;
+            font-family:var(--font-mono); font-size:13px; letter-spacing:0.01em; }
+  .crumb { color:var(--fg-muted); text-decoration:underline; text-decoration-thickness:1px;
+           text-underline-offset:3px; text-decoration-color:var(--fg-subtle);
+           border-radius:4px; padding:2px 4px; margin:-2px -4px;
+           transition:color 0.15s var(--ease-out), text-decoration-color 0.15s var(--ease-out); }
+  .crumb:hover { color:var(--fg); text-decoration-color:var(--fg); }
+  .crumb.current { color:var(--fg); text-decoration:none; cursor:default; }
+
+  /* ── the ladder. every seam is a rotated thin bar; only tone / weight / length / air change ── */
+  .seam { flex-shrink:0; display:inline-block; border-radius:1px; }
+
+  /* L0 · current: border tone, the divider color. barely reads. */
+  .l0 { width:1.5px; height:15px; background:var(--border-strong); transform:rotate(18deg); margin-inline:2px; }
+  /* B · weight only: 2px, tone unchanged (still the divider color) */
+  .lB { width:2px; height:15px; background:var(--border-strong); transform:rotate(18deg); margin-inline:2px; }
+  /* B + 3px length: B with the seam three pixels taller (18px) */
+  .lBl { width:2px; height:18px; background:var(--border-strong); transform:rotate(18deg); margin-inline:2px; }
+  .menu-btn { display:inline-flex; align-items:center; justify-content:center;
+    width:30px; min-width:30px; height:30px; flex-shrink:0;
+    background:transparent; color:var(--fg-muted);
+    border:1px solid var(--border); border-radius:var(--r-md); cursor:pointer;
+    transition:background 0.2s var(--ease-out), border-color 0.2s var(--ease-out), color 0.2s var(--ease-out); }
+  .menu-btn svg { width:18px; height:18px; }
+  .menu-btn:hover { background:var(--overlay-hover); border-color:var(--border-strong); color:var(--fg); }
+
+  .divider { height:1px; background:var(--border); margin-block:var(--s7); }
+  .foot { font-size:13px; line-height:1.6; color:var(--fg-subtle); max-width:70ch; }
+
+  @media (prefers-reduced-motion:reduce) { .crumb, .menu-btn { transition:none; } }
+</style>
+</head>
+<body>
+  <div class="page">
+    <h1>Path separator: emphasis ladder</h1>
+    <p class="lede">Swapping the font glyph for a drawn bar also dropped the separator from the chrome text tone
+      (<code>--fg-subtle</code>, what the old <code>/</code> used) down to a border tone (<code>--border-strong</code>),
+      which is built to recede. So it reads faint. The fix is luminance, not hue: walk the seam back up the grey ramp.
+      Each row below is the same deep path <code>/ johndoe / project / doc</code>; only the seam changes.</p>
+    <div class="swatches">
+      <span class="sw"><i style="background:#363636"></i>--border-strong #363636 (current)</span>
+      <span class="sw"><i style="background:#555555"></i>--fg-disabled #555555</span>
+      <span class="sw"><i style="background:#8f8f8f"></i>--fg-subtle #8f8f8f</span>
+      <span class="sw"><i style="background:#b3b3b3"></i>--fg-muted #b3b3b3</span>
+    </div>
+
+    <div class="spec">
+      <div class="spec-label"><span class="spec-name">L0 · current</span><span class="spec-tag">border-strong · 1.5px · 15px · 18°</span></div>
+      <div class="bar"><div class="bar-inner">
+        <div class="crumbs" aria-label="Breadcrumb">
+          <span class="seam l0" aria-hidden="true"></span><a class="crumb" href="#">johndoe</a>
+          <span class="seam l0" aria-hidden="true"></span><a class="crumb" href="#">project</a>
+          <span class="seam l0" aria-hidden="true"></span><span class="crumb current" aria-current="page">doc</span>
+        </div>
+        <button class="menu-btn" aria-label="Open menu" title="Menu"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg></button>
+      </div></div>
+      <p class="spec-str">Painted the color of a divider. It recedes exactly as a border is meant to, which is why it disappears.</p>
+    </div>
+
+    <div class="spec">
+      <div class="spec-label"><span class="spec-name">B · weight only</span><span class="spec-tag">border-strong · 2px · 15px · 18°</span></div>
+      <div class="bar"><div class="bar-inner">
+        <div class="crumbs" aria-label="Breadcrumb">
+          <span class="seam lB" aria-hidden="true"></span><a class="crumb" href="#">johndoe</a>
+          <span class="seam lB" aria-hidden="true"></span><a class="crumb" href="#">project</a>
+          <span class="seam lB" aria-hidden="true"></span><span class="crumb current" aria-current="page">doc</span>
+        </div>
+        <button class="menu-btn" aria-label="Open menu" title="Menu"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg></button>
+      </div></div>
+      <p class="spec-str">Only the weight moves: 2px, tone still at the divider color. Thicker, but it stays dim, which is the point: width was never the thing holding it back, tone was.</p>
+    </div>
+
+    <div class="spec">
+      <div class="spec-label"><span class="spec-name">B · weight + 3px length</span><span class="spec-tag">border-strong · 2px · 18px · 18°</span></div>
+      <div class="bar"><div class="bar-inner">
+        <div class="crumbs" aria-label="Breadcrumb">
+          <span class="seam lBl" aria-hidden="true"></span><a class="crumb" href="#">johndoe</a>
+          <span class="seam lBl" aria-hidden="true"></span><a class="crumb" href="#">project</a>
+          <span class="seam lBl" aria-hidden="true"></span><span class="crumb current" aria-current="page">doc</span>
+        </div>
+        <button class="menu-btn" aria-label="Open menu" title="Menu"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg></button>
+      </div></div>
+      <p class="spec-str">B with the seam three pixels taller (18px). More presence at the top and bottom; tone still unchanged, so it reads stronger than plain B but stays in the divider register.</p>
+    </div>
+
+    <div class="divider"></div>
+    <p class="foot">Remaining rungs: <b>L0</b> (current), <b>B</b> (weight), and <b>B + 3px length</b>. Tell me which to lock
+      and I will apply it to <code>nav-sample.html</code>, <code>complete-sample-palv2.1.html</code>, and the
+      <code>nav-slash-variants.html</code> spec.</p>
+  </div>
+</body>
+</html>

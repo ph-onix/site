@@ -40,7 +40,8 @@
      Location is NOT signalled by an accent tab; it is read from a terminal-style
      breadcrumb PATH on the left. The current (last) segment is always white and
      never a link — you are there. Ancestor segments are muted links that brighten
-     to white on hover. `~/` is a static prompt prefix; `home` is the landing root.
+     to white on hover. A leading `/` opens the path and the name is the landing root;
+     separators are drawn 2px hairline seams (18px tall), not the font's slash glyph.
      On the right, a project switcher opens the directory for lateral jumps between
      projects (the upward-only breadcrumb can't do this). No accent tab anywhere —
      the breadcrumb owns location, so the accent is reserved for the focus ring.
@@ -78,11 +79,12 @@
   /* ── breadcrumb path (left) — the "machine" register, Geist Mono ── */
   .crumbs { display:flex; align-items:center; gap:6px; min-width:0;
             font-family:var(--font-mono); font-size:13px; letter-spacing:0.01em; }
-  /* structural marks — heavier weight so they read as the path's scaffolding */
-  .sep { color:var(--fg-subtle); font-weight:500; user-select:none; flex-shrink:0; }
-
-  /* `~/` prompt prefix — a static sigil, not a link, never highlighted */
-  .prompt { color:var(--fg-subtle); font-weight:500; user-select:none; flex-shrink:0; }
+  /* structural marks: a drawn 2px hairline seam (rotated thin bar, 18px tall), not a glyph;
+     the same border language that draws every seam in the system, now dividing the path
+     (the 'B · weight + 3px length' separator variant). */
+  .sep-hair { flex-shrink:0; display:inline-block; width:2px; height:18px;
+              background:var(--border-strong); transform:rotate(18deg); border-radius:1px;
+              margin-inline:2px; }
 
   /* ancestor segment — a link: muted at rest, brightens to white on hover */
   .crumb {
@@ -171,17 +173,17 @@
 </head>
 <body>
 
-  <!-- ── P8 · top nav — demo route: ~/ home / project / doc ──
+  <!-- ── P8 · top nav — demo route: / johndoe / project / doc ──
        sticky lives on .nav-sticky; the blurred bar (.nav) is a plain child (Supabase config). -->
   <div class="nav-sticky">
   <nav class="nav" aria-label="Primary">
     <div class="wrap">
       <div class="crumbs" aria-label="Breadcrumb">
-        <span class="prompt" aria-hidden="true">~/</span>
-        <a class="crumb" href="#">home</a>
-        <span class="sep" aria-hidden="true">/</span>
+        <span class="sep-hair" aria-hidden="true"></span>
+        <a class="crumb" href="#">johndoe</a>
+        <span class="sep-hair" aria-hidden="true"></span>
         <a class="crumb" href="#">project</a>
-        <span class="sep" aria-hidden="true">/</span>
+        <span class="sep-hair" aria-hidden="true"></span>
         <span class="crumb current" aria-current="page">doc</span>
       </div>
 
