@@ -1,4 +1,416 @@
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/Geist/Geist-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/Geist/Geist-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/Geist/GeistMono-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/Geist/GeistMono-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+}
+
+:root {
+  // surfaces
+  --well:       #151413;
+  --bg:         #181716;
+  --surface-1:  #1d1c1a;
+  --surface-2:  #21201e;
+  --surface-3:  #272523;
+
+  // borders
+  --border:          #2f2e2b;
+  --border-strong:   #373530;
+  --border-disabled: #252422;
+
+  // text & icons
+  --fg:          #edecea;
+  --icon:        #d9d8d5;
+  --fg-muted:    #b4b2ae;
+  --fg-subtle:   #908e89;
+  --fg-disabled: #565451;
+  --doc-body:    #e0e0e0;
+
+  // inverse
+  --inverse-bg: #edecea;
+  --inverse-fg: #181716;
+
+  // status
+  --status-on:    #ededed;
+  --status-idle:  #a1a1a1;
+  --status-off:   #7a7a7a;
+
+  // semantic feedback
+  --error:      #d96b6b;  --error-bg:   rgba(217, 107, 107, 0.12);
+  --warning:    #d9904c;  --warning-bg: rgba(217, 144, 76, 0.12);
+  --success:    #7fae7f;  --success-bg: rgba(127, 174, 127, 0.12);
+  --info:       #6fbbf0;  --info-bg:    rgba(111, 187, 240, 0.12);
+
+  // selection & focus
+  --selection:        rgba(237, 237, 237, 0.16);
+  --selection-accent: rgba(111, 187, 240, 0.22);
+  --focus:            #6fbbf0;
+
+  // fonts
+  --font-sans: "Geist", sans-serif;
+  --font-mono: "Geist Mono", monospace;
+  --font-alt:  "Inter", sans-serif;
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 24px;
+
+  // spacing scale
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 64px;
+
+  // border radius
+  --r-sm:   4px;
+  --r-md:   8px;
+  --r-lg:   12px;
+  --r-pill: 999px;
+
+  // layout
+  --container-width: 1240px;
+  --nav-h:    50px;
+  --z-sticky: 100;
+
+  // overlays
+  --overlay-hover: rgba(237, 237, 237, 0.06);
+
+  // motion
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur: 0.3s;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+::selection { background: var(--selection); }
+
 body {
-	font-family: sans-serif;
-	text-align: center;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+  min-height: 100dvh;
+}
+
+.homecontent {
+  max-width: var(--container-width);
+  margin-inline: auto;
+  padding-inline: var(--s4);
+
+  // typography defaults — sections inherit without re-declaring
+  h2 {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--fg);
+  }
+
+  h3 {
+    font-size: var(--text-lg);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--fg);
+  }
+
+  p {
+    font-size: var(--text-md);
+    line-height: 1.6;
+    color: var(--fg-muted);
+  }
+
+  a {
+    color: var(--fg);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--border-strong);
+    transition: text-decoration-color var(--dur) var(--ease-out);
+
+    &:hover { text-decoration-color: var(--fg); }
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus);
+      border-radius: var(--r-sm);
+    }
+  }
+
+  ul, ol {
+    padding-inline-start: var(--s5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+    color: var(--fg-muted);
+    font-size: var(--text-md);
+    line-height: 1.6;
+  }
+}
+
+@mixin hover-light {
+  transition: background var(--dur) var(--ease-out), color var(--dur) var(--ease-out),
+              border-color var(--dur) var(--ease-out);
+  &:hover { background: rgba(237, 237, 237, 0.06); }
+}
+
+.nav-sticky {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  width: 100%;
+
+  // blurred bar — a separate node from the sticky wrapper (avoids scroll drift)
+  > nav {
+    width: 100%;
+    height: var(--nav-h);
+    background: rgba(24, 23, 22, 0.78);
+    -webkit-backdrop-filter: blur(10px) saturate(1.4);
+    backdrop-filter: blur(10px) saturate(1.4);
+    border-bottom: 1px solid var(--border);
+
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      background: var(--bg);
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      background: var(--bg);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+
+    // container — max-width + the flex row
+    > div {
+      max-width: var(--container-width);
+      margin-inline: auto;
+      padding-inline: var(--s4);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--s5);
+    }
+  }
+
+  // menu trigger (only button in the bar)
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    color: var(--fg-muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    @include hover-light;
+
+    &:hover { border-color: var(--border-strong); color: var(--fg); }
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus);
+    }
+    svg { width: 18px; height: 18px; }
+  }
+
+  // while the menu is open, highlight the trigger's border + icon (no bg fill)
+  &:has(.nav-menu:popover-open) button {
+    color: var(--fg);
+    border-color: var(--border-strong);
+  }
+}
+
+.crumbs {
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.01em;
+
+  ol {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    list-style: none;
+  }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  // separator seam — a drawn hairline before every segment (incl. the leading one)
+  li::before {
+    content: "";
+    flex-shrink: 0;
+    width: 2px;
+    height: 18px;
+    background: var(--border-strong);
+    border-radius: 1px;
+    transform: rotate(18deg);
+    margin-inline: 2px;
+  }
+
+  // ancestor segment — a link
+  a {
+    padding: 2px 4px;
+    margin: -2px -4px;
+    border-radius: 4px;
+    color: var(--fg-muted);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--fg-subtle);
+    transition: color var(--dur) var(--ease-out), text-decoration-color var(--dur) var(--ease-out);
+
+    &:hover { color: var(--fg); text-decoration-color: var(--fg); }
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus);
+    }
+  }
+
+  // current segment — not a link
+  [aria-current="page"] {
+    color: var(--fg);
+    cursor: default;
+  }
+}
+
+.nav-menu {
+  inset: auto;
+  margin: 0;
+  padding: 8px;
+  min-width: 248px;
+  max-height: min(60vh, 420px);
+  overflow: auto;
+  color: var(--fg);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+
+  // placement — pinned to the viewport. The sticky bar holds the trigger at a
+  // constant spot, so a static fixed position never drifts on scroll (no anchor
+  // tracking to desync). top tucks the menu just above the bar's hairline (bar
+  // is 50px); right tracks the centred 1240 container's right edge.
+  position: fixed;
+  top: 46px;
+  right: max(var(--s3), calc((100vw - var(--container-width)) / 2 + var(--s3)));
+
+  // entry/exit — fade + short slide (discrete so it animates both ways)
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity var(--dur) var(--ease-out), transform var(--dur) var(--ease-out),
+              overlay var(--dur) allow-discrete, display var(--dur) allow-discrete;
+
+  &:popover-open { opacity: 1; transform: translateY(0); }
+
+  // section caption
+  p {
+    padding: 4px 10px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+  // group divider
+  hr {
+    height: 2px;
+    margin: 8px 6px;
+    border: 0;
+    background: var(--border);
+  }
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    list-style: none;
+  }
+
+  // row — grid so icon-less rows align via the empty icon column
+  a {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    color: var(--fg-muted);
+    font-size: var(--text-sm);
+    text-decoration: none;
+    @include hover-light;
+
+    &:hover { color: var(--fg); }
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--surface-2), 0 0 0 4px var(--focus);
+    }
+    &[aria-current="true"] {
+      color: var(--fg);
+      background: rgba(237, 237, 237, 0.05);
+      cursor: default;
+    }
+
+    svg {
+      grid-column: 1;
+      width: 15px;
+      height: 15px;
+      color: var(--fg-subtle);
+    }
+    &:hover svg { color: var(--fg); }
+
+    // name column
+    span {
+      grid-column: 2;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+
+  // a list with no icons drops the reserved icon column so names sit flush
+  ul:not(:has(svg)) a {
+    grid-template-columns: 1fr;
+    span { grid-column: 1; }
+  }
+}
+
+@starting-style {
+  .nav-menu:popover-open { opacity: 0; transform: translateY(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crumbs a,
+  .nav-sticky button,
+  .nav-menu,
+  .nav-menu a { transition: none; }
+  @starting-style {
+    .nav-menu:popover-open { opacity: 1; transform: none; }
+  }
 }

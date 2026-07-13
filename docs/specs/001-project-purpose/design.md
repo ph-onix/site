@@ -166,3 +166,32 @@ so the two priorities compound rather than compete.
   something, it doesn't belong. Snippets are anchored to real source (never
   hand-pasted decoration), shown as the interesting core rather than full files,
   and never collected into a standalone gallery.
+
+
+## Convention
+
+### CSS / SCSS class naming — lean, root-anchored, structural
+
+Fewest class names that still give predictable, scoped styling. HTML carries
+meaning; SCSS carries reuse.
+
+- **One class per component root** — only the outermost element gets a class,
+  named for the component (`.crumbs`, `.pd`). *It's the single anchor all nested
+  rules hang off, and it maps 1:1 to the Leptos component.*
+- **Style children by tag, nested under the root** (`.crumbs { a { … } }`) — no
+  class on descendants. *The tag already identifies them; nesting keeps it
+  scoped.*
+- **Use `> ` where a component can nest inside** — direct-child selectors at
+  boundaries. *A bare descendant selector leaks into nested components.*
+- **A child gets a class only as a tiebreaker**, root-prefixed (`.pd-ico`),
+  when a bare tag can't disambiguate siblings. *Explicit and readable; beats
+  brittle `:nth-child`.*
+- **State via attributes, not modifier classes** — `[aria-current]`,
+  `:popover-open`. *The a11y attribute is already there and is the single source
+  of truth; a `.current` class would just duplicate it.*
+- **Share styling in SCSS, not via a shared HTML class** — `@mixin` /
+  `%placeholder`, values in variables/tokens. *Removes rule duplication without
+  forcing classes into the markup.*
+
+**Naming**: kebab-case; roots named for the component; tiebreaker children
+prefixed with the root.
