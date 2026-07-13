@@ -1,4 +1,4 @@
-use crate::app::Icon;
+use crate::app::{Icon, EMAIL, GITHUB_URL, MAILTO_EMAIL};
 use leptos::prelude::*;
 use leptos_router::components::Outlet;
 use leptos_router::hooks::use_location;
@@ -11,12 +11,8 @@ pub fn Nav() -> impl IntoView {
         .collect_view();
 
     let contacts = vec![
-        (
-            "johndoe@gmail.com",
-            "mailto:johndoe@gmail.com",
-            Icon::LuMail,
-        ),
-        ("Github", "https://github.com/ph-onix", Icon::RaGithubLogo),
+        (EMAIL, MAILTO_EMAIL, Icon::LuMail),
+        ("Github", GITHUB_URL, Icon::RaGithubLogo),
     ]
     .into_iter()
     .map(|(name, href, icon)| view! { <li><NavMenuRow name href icon /></li> })
