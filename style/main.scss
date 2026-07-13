@@ -119,57 +119,14 @@ body {
   min-height: 100dvh;
 }
 
-.homecontent {
-  max-width: var(--container-width);
-  margin-inline: auto;
-  padding-inline: var(--s4);
+// layout root for the landing page — sticky-footer column
+.home {
+  display: flex;
+  flex-direction: column;
+}
 
-  // typography defaults — sections inherit without re-declaring
-  h2 {
-    font-size: var(--text-xl);
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    color: var(--fg);
-  }
-
-  h3 {
-    font-size: var(--text-lg);
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    color: var(--fg);
-  }
-
-  p {
-    font-size: var(--text-md);
-    line-height: 1.6;
-    color: var(--fg-muted);
-  }
-
-  a {
-    color: var(--fg);
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 3px;
-    text-decoration-color: var(--border-strong);
-    transition: text-decoration-color var(--dur) var(--ease-out);
-
-    &:hover { text-decoration-color: var(--fg); }
-    &:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus);
-      border-radius: var(--r-sm);
-    }
-  }
-
-  ul, ol {
-    padding-inline-start: var(--s5);
-    display: flex;
-    flex-direction: column;
-    gap: var(--s2);
-    color: var(--fg-muted);
-    font-size: var(--text-md);
-    line-height: 1.6;
-  }
+.nav-align {
+  padding-inline: max(var(--s4), calc((100% - var(--container-width)) / 2 + var(--s4)));
 }
 
 @mixin hover-light {
@@ -204,9 +161,7 @@ body {
 
     // container — max-width + the flex row
     > div {
-      max-width: var(--container-width);
-      margin-inline: auto;
-      padding-inline: var(--s4);
+      @extend .nav-align;
       height: 100%;
       display: flex;
       align-items: center;
@@ -403,6 +358,146 @@ body {
 
 @starting-style {
   .nav-menu:popover-open { opacity: 0; transform: translateY(-4px); }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+
+.hero {
+  background: var(--well);
+  border-bottom: 1px solid var(--border);
+  padding-block: var(--s7);
+  display: grid;
+  grid-template-columns: 1fr 520px;
+  align-items: center;
+  gap: var(--s7);
+
+  > .hero-copy {
+    min-width: 0;
+
+    h1 {
+      font-size: clamp(22px, 3vw, 26px);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+      text-wrap: balance;
+    }
+
+    p {
+      margin-top: var(--s4);
+      max-width: 54ch;
+      font-size: var(--text-lg);
+      line-height: 1.6;
+      color: var(--fg-muted);
+      text-wrap: pretty;
+    }
+  }
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+    align-items: start;
+    > .term { max-width: 520px; }
+  }
+}
+
+.term {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+
+  // decorative seam — terminal icon + hairline rule
+  > [aria-hidden] {
+    display: flex;
+    align-items: center;
+    gap: var(--s3);
+    color: var(--fg);
+
+    svg {
+      width: 28px;
+      height: 28px;
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+
+    hr {
+      flex: 1;
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+  }
+
+  // append-only history stack
+  > ol {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s3);
+    font-family: var(--font-mono);
+    font-size: var(--text-md);
+    line-height: 1.7;
+
+    > li {
+      display: flex;
+      flex-direction: column;
+      gap: var(--s2);
+
+      // hairline separator between closed transactions
+      & + li {
+        border-top: 1px solid var(--border);
+        padding-top: var(--s3);
+      }
+
+      > span:first-child { color: var(--fg-muted); }  // command — de-emphasised
+      > span:last-child  { color: var(--fg); }         // single-line output
+
+      // multi-line output (git log)
+      > div {
+        display: flex;
+        flex-direction: column;
+        color: var(--fg);
+
+        > span {
+          display: block;
+          span { color: var(--fg-subtle); }  // commit hash
+        }
+      }
+    }
+  }
+
+  // open transaction — active prompt row
+  &-prompt {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+    font-family: var(--font-mono);
+    font-size: var(--text-md);
+    border-top: 1px solid var(--border);
+    padding-top: var(--s3);
+
+    > span { color: var(--fg-muted); }  // sigil
+
+    input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--fg);
+      font-family: inherit;
+      font-size: inherit;
+      caret-color: var(--fg);
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
