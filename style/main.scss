@@ -584,3 +584,139 @@ body {
     .nav-menu:popover-open { opacity: 1; transform: none; }
   }
 }
+
+// col-span utilities — mobile: full width; md+: declared span
+.col-span-6,
+.col-span-4 { grid-column: span 12; }
+.col-span-12 { grid-column: 1 / -1; }
+
+@media (min-width: 768px) {
+  .col-span-6 { grid-column: span 6; }
+  .col-span-4 { grid-column: span 4; }
+}
+
+.pcatalog {
+  > ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--s5);
+
+    // transparent to the grid — <a> becomes the direct grid item
+    > li { display: contents; }
+
+    // lone card fills the full row
+    > li:only-child > a { grid-column: 1 / -1; }
+  }
+
+  a {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s5);
+    height: 100%;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: var(--s6);
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: border-color var(--dur) var(--ease-out);
+
+    &:hover:not(:has(> div > span:hover)) { border-color: var(--border-strong); }
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus);
+    }
+
+    // head — svg · h3 · activity chip
+    > div {
+      display: flex;
+      align-items: center;
+      gap: var(--s3);
+
+      > svg {
+        flex-shrink: 0;
+        width: 18px;
+        height: 18px;
+        stroke-width: 2;
+        color: var(--icon);
+      }
+
+      > h3 {
+        font-size: var(--text-lg);
+        font-weight: 500;
+        color: var(--fg);
+      }
+
+      > span {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        white-space: nowrap;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--fg-muted);
+        border: 1px solid var(--border);
+        border-radius: var(--r-pill);
+        padding: 3px 10px;
+        cursor: pointer;
+        transition: border-color var(--dur) var(--ease-out);
+
+        &:hover { border-color: var(--border-strong); }
+
+        svg {
+          width: 13px;
+          height: 13px;
+          stroke-width: 2;
+          color: var(--fg-subtle);
+        }
+      }
+    }
+
+    // description
+    > p {
+      font-size: var(--text-md);
+      line-height: 1.65;
+      color: var(--fg-muted);
+    }
+
+    // progression band — pinned to card bottom
+    > dl {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding-top: var(--s4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--s3);
+
+      > div {
+        display: flex;
+        align-items: center;
+        gap: var(--s2);
+
+        dt {
+          flex-shrink: 0;
+          font-family: var(--font-mono);
+          font-size: 10px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--fg-muted);
+          background: var(--surface-2);
+          border: 1px solid var(--border);
+          border-radius: var(--r-pill);
+          padding: 2px 9px;
+        }
+
+        dd {
+          font-size: var(--text-sm);
+          line-height: 1.5;
+          color: var(--fg-muted);
+        }
+      }
+    }
+  }
+}
+
