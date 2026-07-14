@@ -9,15 +9,19 @@ pub fn ProjectCatalog() -> impl IntoView {
     // Each repo is planned to expose a webhook the server will use to cache the most recent state in Redis.
 
     // a row is any set of ProjectCards that have col_spans that sum to 12 or don't specify a col_span
-    let rows = vec![("Card", "/turd", "2026-07-14", "shit good ngl", Icon::VsBash)]
-        .into_iter()
-        .map(|(name, href, last_change_utc, body, icon)| {
-            view! { <li><ProjectCard name href last_change_utc body icon/></li> }
-        })
-        .collect_view();
+    let rows = vec![
+        ("Card", "/turd", "2026-07-14", "shit good ngl", Icon::VsBash),
+        ("Card", "/turd", "2026-07-14", "shit good ngl", Icon::VsBash),
+    ]
+    .into_iter()
+    .map(|(name, href, last_change_utc, body, icon)| {
+        view! { <li><ProjectCard name href last_change_utc body icon/></li> }
+    })
+    .collect_view();
 
     view! {
         <div class="pcatalog">
+            <h2>Projects</h2>
             <ul>{rows}</ul>
         </div>
     }
@@ -31,7 +35,7 @@ fn ProjectCard(
     last_change_utc: &'static str,
     body: &'static str,
     icon: Icon,
-    #[prop(optional)] col_span: Option<u8>,
+    #[prop(default = 12)] col_span: u8,
     #[prop(optional)] headlines: Option<Vec<(String, String)>>,
 ) -> impl IntoView {
     let fmt_last_change = match NaiveDate::parse_from_str(last_change_utc, "%Y-%m-%d") {
@@ -64,13 +68,8 @@ fn ProjectCard(
         }
         None => Either::Right(view! { <></> }),
     };
-
-    let dyn_col_span = match col_span {
-        Some(v) => format!("col-span-{v}"),
-        None => "".to_string(),
-    };
     view! {
-        <a class=dyn_col_span href=href>
+        <a class=format!("col-span-{col_span}") href=href>
             <div>
                 {icon.into_view()}
                 <h3>{name}</h3>
