@@ -9,7 +9,7 @@ use std::fmt;
 
 pub const EMAIL: &'static str = "pmiller0706@gmail.com";
 pub const MAILTO_EMAIL: &'static str = "mailto:pmiller0706@gmail.com";
-pub const GITHUB_URL: &'static str = "https://github.com/ph-onix.com";
+pub const GITHUB_URL: &'static str = "https://github.com/ph-onix";
 
 pub enum Icon {
     RaGithubLogo,
@@ -92,14 +92,10 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
 
 #[component]
 pub fn App() -> impl IntoView {
-    // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
 
     view! {
-        // injects a stylesheet into the document <head>
-        // id=leptos means cargo-leptos will hot-reload this stylesheet
         <Stylesheet id="leptos" href="/pkg/site.css"/>
-
         <Title text="title"/>
         <Router>
             <main>
@@ -121,7 +117,7 @@ fn Home() -> impl IntoView {
         <div class="home-content nav-align">
             <ProjectCatalog/>
             <BuildLog />
-            <footer role="contentinfo" aria-label="Footer">
+            <footer role="contentinfo" aria_label="Footer">
                 <p>
                     <span>{Icon::LuCopyright.into_view()} Pheonx Miller</span>
                     <span aria-hidden>"—"</span>

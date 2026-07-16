@@ -1,28 +1,59 @@
+use crate::api::repo_state::RepoState;
 use crate::app::Icon;
-use crate::repo_state::RepoCache;
-use chrono::{NaiveDate, Utc};
+use chrono::{DateTime, Utc};
 use leptos::either::Either;
 use leptos::prelude::*;
+use std::sync::Arc;
+
+#[server]
+async fn list_repos() -> Result<Vec<RepoState>, ServerFnError> {
+    let mut cache = expect_context::<crate::api::repo_cache::RepoCache>();
+    cache
+        .repos(None)
+        .await
+        .map_err(|e| ServerFnError::new(e.to_string()))
+}
 
 #[component]
 pub fn ProjectCatalog() -> impl IntoView {
     // Each repo is planned to expose a webhook the server will use to cache the most recent state in Redis.
-
     // a row is any set of ProjectCards that have col_spans that sum to 12 or don't specify a col_span
-    let rows = vec![
-        ("Card", "/turd", "2026-07-14", "shit good ngl", Icon::VsBash),
-        ("Card", "/turd", "2026-07-14", "shit good ngl", Icon::VsBash),
-    ]
-    .into_iter()
-    .map(|(name, href, last_change_utc, body, icon)| {
-        view! { <li><ProjectCard name href last_change_utc body icon/></li> }
-    })
-    .collect_view();
+
+    let repos = Resource::new(
+        || (),
+        |_| async move { list_repos().await.map(|v| Arc::new(v)) },
+    );
+    let repo_view = move || {
+        Suspend::new(async move {
+            let result = repos.await;
+            match result {
+                Ok(v) => v
+                    .iter()
+                    .map(|v| {
+                        view! {
+                            <li>
+                                <ProjectCard
+                                    name=v.name.clone()
+                                    href=format!("/{}", v.name)
+                                    last_change_utc=v.head_commit.as_ref().map(|v| v.timestamp.clone())
+                                    description=v.description.clone()
+                                />
+                            </li>
+                        }
+                        .into_any()
+                    })
+                    .collect_view(),
+                Err(e) => vec![view! { <p>{e.to_string()}</p> }.into_any()],
+            }
+        })
+    };
 
     view! {
         <div class="pcatalog">
             <h2>Projects</h2>
-            <ul>{rows}</ul>
+            <Suspense fallback=move || view! { <p>Loading ???</p> }>
+                <ul>{repo_view}</ul>
+            </Suspense>
         </div>
     }
 }
@@ -30,17 +61,17 @@ pub fn ProjectCatalog() -> impl IntoView {
 /// Compact representation of a Github repo commit state.
 #[component]
 fn ProjectCard(
-    name: &'static str,
-    href: &'static str,
-    last_change_utc: &'static str,
-    body: &'static str,
-    icon: Icon,
+    name: String,
+    href: String,
+    last_change_utc: Option<DateTime<Utc>>,
+    description: Option<String>,
+    #[prop(optional)] icon: Option<Icon>,
     #[prop(default = 12)] col_span: u8,
     #[prop(optional)] headlines: Option<Vec<(String, String)>>,
 ) -> impl IntoView {
-    let fmt_last_change = match NaiveDate::parse_from_str(last_change_utc, "%Y-%m-%d") {
-        Ok(date) => Either::Left({
-            let day_delta = (Utc::now().date_naive() - date).num_days();
+    let fmt_last_change = match last_change_utc {
+        Some(v) => Either::Left({
+            let day_delta = (Utc::now().date_naive() - v.date_naive()).num_days();
             let fmt_delta = match day_delta {
                 0 => "today".to_string(),
                 1 => "yesterday".to_string(),
@@ -48,7 +79,7 @@ fn ProjectCard(
             };
             view! { <span>{format!("last change {fmt_delta}")}</span> }
         }),
-        Err(_) => Either::Right(view! { <></> }),
+        None => Either::Right(view! { <></> }),
     };
     let headline_view = match headlines {
         Some(v) => {
@@ -71,11 +102,11 @@ fn ProjectCard(
     view! {
         <a class=format!("col-span-{col_span}") href=href>
             <div>
-                {icon.into_view()}
+                {icon.map(|v| v.into_view())}
                 <h3>{name}</h3>
                 {fmt_last_change}
             </div>
-            <p>{body}</p>
+            <p>{description}</p>
             {headline_view}
         </a>
     }

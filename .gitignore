@@ -19,3 +19,4 @@ docs/*
 PRODUCT.md
 DESIGN.md
 .impeccable
+.env*
