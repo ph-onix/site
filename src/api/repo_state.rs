@@ -1,8 +1,5 @@
 use chrono::{DateTime, Utc};
-use serde::{
-    Deserialize, Deserializer, Serialize, Serializer,
-    de::{self, Error as _},
-};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct RepoState {
@@ -40,9 +37,3 @@ pub struct Author {
     pub username: String,
     pub email: String,
 }
-
-// fn parse_timestamp<'de, D>(d: D) -> Result<DateTime<Utc>, D::Error>
-// where
-//     D: Deserializer<'de>,
-// {
-// }

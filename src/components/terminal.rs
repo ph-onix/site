@@ -26,7 +26,7 @@ pub fn Terminal() -> impl IntoView {
             <div class="term-prompt">
                 <span aria_hidden="true">$</span>
                 <label for="cmd-input" class="sr-only">Terminal command</label>
-                <input id="cmd-input" type="text" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" />
+                <input id="cmd-input" type="text" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" disabled/>
             </div>
         </div>
     }
