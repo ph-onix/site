@@ -21,7 +21,11 @@ pub fn BuildLog() -> impl IntoView {
     let commit_view = move || {
         Suspend::new(async move {
             match commits.await {
-                Ok(v) => v
+                Ok(v) => {
+                    if v.len() == 0 {
+                        return Fallback().into_any();
+                    }
+                    let v = v
                     .iter()
                     .map(|c| {
                         view! {
@@ -33,8 +37,9 @@ pub fn BuildLog() -> impl IntoView {
                             />
                         }
                     })
-                    .collect_view()
-                    .into_any(),
+                    .collect_view();
+                    view! { <ol>{v}</ol> }.into_any()
+                }
                 Err(_) => view! { <span>Well damn, looks like something broke.</span> }.into_any(),
             }
         })
@@ -50,11 +55,9 @@ pub fn BuildLog() -> impl IntoView {
                     {Icon::LuChevron.into_view()}
                 </a>
             </div>
-            <ol>
-                <Suspense fallback=move || view! {}>
-                    {commit_view}
-                </Suspense>
-            </ol>
+            <Suspense fallback=move || Fallback()>
+                {commit_view}
+            </Suspense>
         </div>
     }
 }
@@ -76,5 +79,62 @@ fn Entry(
                 {Icon::Link.into_view()}
             </a>
         </li>
+    }
+}
+
+#[component]
+fn Fallback() -> impl IntoView {
+    view! {
+        <ol class="bl-skel">
+            <li>
+                <div>
+                    <span></span>
+                    <span><span></span><span></span><span></span><span></span><span></span></span>
+                    <span></span>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <span></span>
+                    <span><span></span><span></span><span></span><span></span><span></span></span>
+                    <span></span>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <span></span>
+                    <span><span></span><span></span><span></span><span></span><span></span></span>
+                    <span></span>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <span></span>
+                    <span><span></span><span></span><span></span><span></span><span></span></span>
+                    <span></span>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <span></span>
+                    <span><span></span><span></span><span></span><span></span><span></span></span>
+                    <span></span>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <span></span>
+                    <span><span></span><span></span><span></span><span></span><span></span></span>
+                    <span></span>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <span></span>
+                    <span><span></span><span></span><span></span><span></span><span></span></span>
+                    <span></span>
+                </div>
+            </li>
+        </ol>
     }
 }

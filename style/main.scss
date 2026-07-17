@@ -112,6 +112,13 @@
   --pcard-rise:    8px;
   --pcard-blur:    6px;
   --pcard-stagger: 55ms;
+
+  // build-log entrance — log rows resolve out of blur when the skeleton clears.
+  // Tighter than the cards: rows are lighter, so a shorter throw + faster cadence.
+  --blog-dur:     0.5s;
+  --blog-rise:    6px;
+  --blog-blur:    5px;
+  --blog-stagger: 45ms;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -977,8 +984,11 @@ body {
     }
   }
 
-  // right: threaded log
-  > ol {
+  // right: threaded log — the real thread only. Excludes .bl-skel so the
+  // skeleton <ol> (also a direct child of .bl) doesn't inherit the row border,
+  // hover, or the blog-in entrance whose hidden `from` frame would suppress the
+  // wave. The skeleton is fully self-styled below.
+  > ol:not(.bl-skel) {
     list-style: none;
     border-top: 1px solid var(--border);
 
@@ -988,6 +998,19 @@ body {
 
       &:last-child { border-bottom: none; }
       &:hover { background: var(--surface-1); }
+
+      // entrance — each row resolves out of blur as the real <ol> replaces the
+      // skeleton. Fires on node insertion (no JS); `backwards` fill holds
+      // staggered rows at the hidden `from` frame until their turn, and leaves
+      // no lingering filter (not forwards) that would create a containing block.
+      animation: blog-in var(--blog-dur) var(--ease-out) backwards;
+
+      &:nth-child(1) { animation-delay: calc(0 * var(--blog-stagger)); }
+      &:nth-child(2) { animation-delay: calc(1 * var(--blog-stagger)); }
+      &:nth-child(3) { animation-delay: calc(2 * var(--blog-stagger)); }
+      &:nth-child(4) { animation-delay: calc(3 * var(--blog-stagger)); }
+      &:nth-child(5) { animation-delay: calc(4 * var(--blog-stagger)); }
+      &:nth-child(6) { animation-delay: calc(5 * var(--blog-stagger)); }
 
       > a {
         display: flex;
@@ -1032,8 +1055,123 @@ body {
   @media (prefers-reduced-motion: reduce) {
     > div > a,
     > div > a > svg,
-    > ol > li,
-    > ol > li > a,
-    > ol > li > a > svg { transition: none; }
+    > ol:not(.bl-skel) > li,
+    > ol:not(.bl-skel) > li > a,
+    > ol:not(.bl-skel) > li > a > svg { transition: none; }
+    > ol:not(.bl-skel) > li { animation: none; }
+  }
+}
+
+// build-log entrance — resolve out of blur (paired with .bl > ol > li).
+// Not fill-forwards on purpose: the row reverts to its own styles after, so no
+// stray filter is left creating a containing block over the settled rows.
+@keyframes blog-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--blog-rise));
+    filter: blur(var(--blog-blur));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+// build log — pre-hydration skeleton
+// Static placeholder shown until the real threaded <ol> hydrates. It sits as the
+// .bl grid's second child, so it lands in the log column with no extra placement.
+// Each row mirrors a real entry — date · project · message — on the same flex row
+// and padding, so the swap doesn't reflow the thread. A wave sweeps every bar;
+// the project cell is a scramble field (reusing the catalog's glyph loops) so the
+// two skeletons read as one family.
+.bl-skel {
+  list-style: none;
+  border-top: 1px solid var(--border);  // MUST match .bl > ol so the swap holds the top seam
+
+  > li {
+    border-bottom: 1px solid var(--border);
+    &:last-child { border-bottom: none; }
+
+    // row — mirrors .bl > ol > li > a padding + gap so the swap keeps row height
+    > div {
+      display: flex;
+      align-items: center;
+      gap: var(--s3);
+      padding: var(--s4) var(--s3);
+    }
+  }
+
+  // every placeholder bar — the wave sweeps across it
+  span {
+    display: block;
+    height: 13px;
+    border-radius: var(--r-sm);
+    background: linear-gradient(
+      100deg,
+      var(--surface-2) 30%,
+      var(--surface-3) 50%,
+      var(--surface-2) 70%
+    );
+    background-size: 200% 100%;
+    animation: skel-wave 2.8s linear infinite;
+  }
+
+  // date cell — matches the 54px mono column in the real row
+  > li > div > span:nth-child(1) {
+    width: 54px;
+    flex-shrink: 0;
+  }
+
+  // project cell — scramble field (matches the 62px mono column). Overrides the
+  // wave; each inner cell holds one glyph flickering on its own desynced loop.
+  > li > div > span:nth-child(2) {
+    display: inline-flex;
+    width: 62px;
+    height: auto;
+    flex-shrink: 0;
+    background: none;
+    animation: none;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--border-strong);
+
+    // character cell — a fixed slot so the glyphs sit evenly and don't reflow
+    > span {
+      width: 0.6em;
+      height: auto;
+      background: none;
+      border-radius: 0;
+      animation: none;
+      text-align: center;
+
+      // shared timing only — name + delay come from the per-cell rules
+      &::before {
+        content: "·";
+        animation-duration: 0.66s;
+        animation-timing-function: steps(1, end);
+        animation-iteration-count: infinite;
+      }
+
+      // per-cell glyph sequence + phase offset (keeps the columns out of sync)
+      &:nth-child(1)::before { animation-name: glyph-a; animation-delay: -0.05s; }
+      &:nth-child(2)::before { animation-name: glyph-c; animation-delay: -0.31s; }
+      &:nth-child(3)::before { animation-name: glyph-b; animation-delay: -0.12s; }
+      &:nth-child(4)::before { animation-name: glyph-d; animation-delay: -0.44s; }
+      &:nth-child(5)::before { animation-name: glyph-b; animation-delay: -0.22s; }
+    }
+  }
+
+  // message cell — the wide bar. Widths vary per row so the thread doesn't read
+  // as a rigid grid while it loads.
+  > li > div > span:nth-child(3) { width: 58%; }
+  > li:nth-child(2) > div > span:nth-child(3) { width: 44%; }
+  > li:nth-child(3) > div > span:nth-child(3) { width: 66%; }
+  > li:nth-child(4) > div > span:nth-child(3) { width: 39%; }
+  > li:nth-child(5) > div > span:nth-child(3) { width: 52%; }
+
+  @media (prefers-reduced-motion: reduce) {
+    span,
+    span::before { animation: none; }
   }
 }
