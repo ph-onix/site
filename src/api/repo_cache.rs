@@ -124,22 +124,24 @@ impl RepoCache {
     ///          then parse and cache the results for a dynamic route to render (auto doc pages).
     pub async fn set_event(&mut self, payload: String) -> Result<(), CachingError> {
         let cap: isize = 50;
-        if let Ok(v) = serde_json::from_str::<PushEvent>(&payload) {
+        if let Ok(mut v) = serde_json::from_str::<PushEvent>(&payload) {
             let repo_id = v.repository.id;
+            let repo_name = v.repository.name;
             let new_repo_state = RepoState {
                 id: repo_id,
                 language: v.repository.language,
-                name: v.repository.name,
+                name: repo_name.clone(),
                 description: v.repository.description,
                 head_commit: v.head_commit,
             };
             let new_repo_state = serde_json::to_string(&new_repo_state)?;
             let score_member_pairs: Vec<(i64, String)> = v
                 .commits
-                .iter()
+                .iter_mut()
                 .filter_map(|c| {
+                    c.repo_name = repo_name.clone();
                     if let Ok(json) = serde_json::to_string(c) {
-                        return Some((c.timestamp.timestamp(), json));
+                        return Some((c.timestamp.timestamp() * -1, json));
                     }
                     None
                 })
@@ -300,6 +302,7 @@ mod tests {
                 description: Some("My Leptos personal site".into()),
                 head_commit: Some(Commit {
                     id: "a1b2c3d".into(),
+                    repo_name: "".into(),
                     timestamp: Utc.with_ymd_and_hms(2026, 7, 16, 9, 30, 0).unwrap(),
                     author: Author {
                         username: "ph-onix".into(),
@@ -319,6 +322,7 @@ mod tests {
                 description: None,
                 head_commit: Some(Commit {
                     id: "e4f5g6h".into(),
+                    repo_name: "".into(),
                     timestamp: Utc::now(),
                     author: Author {
                         username: "ph-onix".into(),

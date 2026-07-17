@@ -1,5 +1,8 @@
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize, Deserializer, Serialize, Serializer,
+    de::{self, Error as _},
+};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct RepoState {
@@ -21,6 +24,8 @@ pub struct Repo {
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Commit {
     pub id: String,
+    #[serde(default)]
+    pub repo_name: String,
     pub timestamp: DateTime<Utc>,
     pub author: Author,
     pub distinct: bool,
@@ -35,3 +40,9 @@ pub struct Author {
     pub username: String,
     pub email: String,
 }
+
+// fn parse_timestamp<'de, D>(d: D) -> Result<DateTime<Utc>, D::Error>
+// where
+//     D: Deserializer<'de>,
+// {
+// }

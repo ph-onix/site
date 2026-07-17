@@ -25,8 +25,7 @@ pub fn ProjectCatalog() -> impl IntoView {
     );
     let repo_view = move || {
         Suspend::new(async move {
-            let result = repos.await;
-            match result {
+            match repos.await {
                 Ok(v) => {
                     if v.len() == 0 {
                         return Fallback().into_any();
