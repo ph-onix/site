@@ -27,23 +27,39 @@ pub fn ProjectCatalog() -> impl IntoView {
         Suspend::new(async move {
             let result = repos.await;
             match result {
-                Ok(v) => v
-                    .iter()
-                    .map(|v| {
-                        view! {
-                            <li>
-                                <ProjectCard
-                                    name=v.name.clone()
-                                    href=format!("/{}", v.name)
-                                    last_change_utc=v.head_commit.as_ref().map(|v| v.timestamp.clone())
-                                    description=v.description.clone()
-                                />
-                            </li>
-                        }
-                        .into_any()
-                    })
-                    .collect_view(),
-                Err(e) => vec![view! { <p>{e.to_string()}</p> }.into_any()],
+                Ok(v) => {
+                    if v.len() == 0 {
+                        return Fallback().into_any();
+                    }
+                    let spans: Vec<u8> = match v.len() {
+                        1 => vec![12],
+                        2 => vec![12, 12],
+                        3 => vec![6, 6, 12],
+                        4 => vec![12, 4, 4, 4],
+                        _ => vec![6, 6, 4, 4, 4],
+                    };
+                    let view = spans
+                        .iter()
+                        .zip(v.iter())
+                        .map(|(&col_span, r)| {
+                            view! {
+                                <li>
+                                    <ProjectCard
+                                        name=r.name.clone()
+                                        href=format!("/{}", r.name)
+                                        last_change_utc=r.head_commit.as_ref().map(|r| r.timestamp.clone())
+                                        description=r.description.clone()
+                                        col_span
+                                    />
+                                </li>
+                            }
+                        })
+                        .collect_view();
+                    view! { <ul>{view}</ul> }.into_any()
+                }
+                Err(_) => {
+                    view! { <span>Well shit, this is not supposed to happen.</span> }.into_any()
+                }
             }
         })
     };
@@ -51,8 +67,8 @@ pub fn ProjectCatalog() -> impl IntoView {
     view! {
         <div class="pcatalog">
             <h2>Projects</h2>
-            <Suspense fallback=move || view! { <p>Loading ???</p> }>
-                <ul>{repo_view}</ul>
+            <Suspense fallback=move || Fallback()>
+                {repo_view}
             </Suspense>
         </div>
     }
@@ -109,5 +125,54 @@ fn ProjectCard(
             <p>{description}</p>
             {headline_view}
         </a>
+    }
+}
+
+#[component]
+fn Fallback() -> impl IntoView {
+    view! {
+        <div class="pcatalog-skel">
+            <ul>
+                <li>
+                    <div>
+                        <div>
+                            <span></span>
+                            <span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+                            <span></span>
+                        </div>
+                        <div>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </li>
+                <li>
+                    <div>
+                        <div>
+                            <span></span>
+                            <span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+                            <span></span>
+                        </div>
+                        <div>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </li>
+                // <li>
+                //     <div>
+                //         <div>
+                //             <span></span>
+                //             <span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+                //             <span></span>
+                //         </div>
+                //         <div>
+                //             <span></span>
+                //             <span></span>
+                //         </div>
+                //     </div>
+                // </li>
+            </ul>
+        </div>
     }
 }

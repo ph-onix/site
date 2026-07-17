@@ -106,6 +106,12 @@
   // motion
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --dur: 0.3s;
+
+  // project-card entrance — cards resolve out of blur when the skeleton clears
+  --pcard-dur:     0.55s;
+  --pcard-rise:    8px;
+  --pcard-blur:    6px;
+  --pcard-stagger: 55ms;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -610,6 +616,19 @@ body {
 
     // lone card fills the full row
     > li:only-child > a { grid-column: 1 / -1; }
+
+    // entrance — each card resolves out of blur as <Suspense> swaps the
+    // skeleton for the real <ul>. Fires on node insertion (no JS); `backwards`
+    // fill holds staggered cards at the hidden `from` frame until their turn
+    // and leaves no lingering filter once each settles.
+    > li > a {
+      animation: pcard-in var(--pcard-dur) var(--ease-out) backwards;
+    }
+    > li:nth-child(1) > a { animation-delay: calc(0 * var(--pcard-stagger)); }
+    > li:nth-child(2) > a { animation-delay: calc(1 * var(--pcard-stagger)); }
+    > li:nth-child(3) > a { animation-delay: calc(2 * var(--pcard-stagger)); }
+    > li:nth-child(4) > a { animation-delay: calc(3 * var(--pcard-stagger)); }
+    > li:nth-child(5) > a { animation-delay: calc(4 * var(--pcard-stagger)); }
   }
 
   a {
@@ -721,6 +740,188 @@ body {
       }
     }
   }
+}
+
+// project-card entrance — resolve out of blur (paired with .pcatalog > ul > li > a).
+// Not fill-forwards on purpose: the card reverts to its own styles after, so no
+// stray filter is left creating a containing block over the settled cards.
+@keyframes pcard-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--pcard-rise));
+    filter: blur(var(--pcard-blur));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pcatalog > ul > li > a { animation: none; }
+}
+
+// project catalog — pre-hydration skeleton
+// Static placeholder shown until the real .pcatalog cards hydrate. Three cards
+// laid on the same 12-col grid as the real catalog — 6 / 6 on top, 12 across the
+// bottom. A wave sweeps every bar. The title is a scramble field — per-cell
+// glyphs flip through a desynced loop while the wave plays around it.
+.pcatalog-skel {
+  // <Suspense> mounts the fallback as a direct child of .pcatalog > ul, i.e. a
+  // grid item — span the full row so it isn't squeezed into a single column
+  grid-column: 1 / -1;
+
+  // same grid mechanics as .pcatalog > ul so the swap doesn't reflow the frame
+  > ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--s5);  // 24px — MUST match .pcatalog > ul so the swap doesn't shift the gap
+  }
+
+  // 6 / 6 / 12. Mobile: every card full-width, mirroring the .col-span-*
+  // utilities that collapse the real cards below 768px.
+  > ul > li { grid-column: 1 / -1; }
+  @media (min-width: 768px) {
+    > ul > li:nth-child(1) { grid-column: span 6; }
+    > ul > li:nth-child(2) { grid-column: span 6; }
+    > ul > li:nth-child(3) { grid-column: 1 / -1; }
+  }
+
+  // card frame — mirrors .pcatalog a (height:100% so the 6/6 pair match rows)
+  > ul > li > div {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s5);
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: var(--s6);
+  }
+
+  // every placeholder bar — the wave sweeps across it
+  span {
+    display: block;
+    height: 13px;
+    border-radius: var(--r-sm);
+    background: linear-gradient(
+      100deg,
+      var(--surface-2) 30%,
+      var(--surface-3) 50%,
+      var(--surface-2) 70%
+    );
+    background-size: 200% 100%;
+    animation: skel-wave 2.8s linear infinite;
+  }
+
+  // head — icon · title · chip
+  > ul > li > div > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: var(--s3);
+
+    // icon — rounded square (inherits the wave)
+    > span:nth-child(1) {
+      width: 20px;
+      height: 20px;
+      border-radius: var(--r-sm);
+    }
+
+    // title — scramble field. Overrides the wave bar; each inner cell holds
+    // one glyph flickering on its own desynced loop (see the per-cell rules).
+    > span:nth-child(2) {
+      display: inline-flex;
+      width: auto;
+      height: auto;
+      background: none;
+      animation: none;
+      font-size: var(--text-lg);   // match the card heading — .pcatalog a > div > h3
+      font-weight: 500;
+      color: var(--border);        // a step up so the thin glyphs read like the pill's fill
+
+      // character cell — a fixed slot so the sans letters sit evenly and
+      // don't reflow as they flip
+      > span {
+        width: 0.7em;
+        height: auto;
+        background: none;
+        border-radius: 0;
+        animation: none;
+        text-align: center;
+
+        // shared timing only — name + delay come from the per-cell rules
+        &::before {
+          content: "·";
+          animation-duration: 0.66s;
+          animation-timing-function: steps(1, end);
+          animation-iteration-count: infinite;
+        }
+
+        // per-cell glyph sequence + phase offset (keeps the columns out of sync)
+        &:nth-child(1)::before { animation-name: glyph-a; animation-delay: -0.05s; }
+        &:nth-child(2)::before { animation-name: glyph-c; animation-delay: -0.31s; }
+        &:nth-child(3)::before { animation-name: glyph-b; animation-delay: -0.12s; }
+        &:nth-child(4)::before { animation-name: glyph-d; animation-delay: -0.44s; }
+        &:nth-child(5)::before { animation-name: glyph-b; animation-delay: -0.22s; }
+        &:nth-child(6)::before { animation-name: glyph-a; animation-delay: -0.53s; }
+        &:nth-child(7)::before { animation-name: glyph-d; animation-delay: -0.18s; }
+        &:nth-child(8)::before { animation-name: glyph-c; animation-delay: -0.37s; }
+      }
+    }
+
+    // chip — wave pill
+    > span:nth-child(3) {
+      width: 128px;
+      height: 20px;
+      margin-left: auto;
+      border-radius: var(--r-pill);
+    }
+  }
+
+  // body — a single description line. This is the floor: a loaded card always
+  // has a heading plus at least this one line, so the skeleton is never taller
+  // than what replaces it — the swap only ever grows, never shrinks/collapses.
+  // The fallback markup ships two bars; I hide the second here rather than edit
+  // the component, so the placeholder models the shortest real card.
+  > ul > li > div > div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s3);
+
+    > span:nth-child(1) { width: 65%; }
+    > span:nth-child(2) { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    span,
+    span::before { animation: none; }
+  }
+}
+
+// title glyph flicker — discrete content swaps (letters only)
+@keyframes glyph-a {
+  0%   { content: "A"; } 16% { content: "d"; } 33% { content: "f"; }
+  50%  { content: "L"; } 66% { content: "K"; } 83% { content: "h"; } 100% { content: "Q"; }
+}
+@keyframes glyph-b {
+  0%   { content: "a"; } 16% { content: "A"; } 33% { content: "e"; }
+  50%  { content: "d"; } 66% { content: "d"; } 83% { content: "s"; } 100% { content: "z"; }
+}
+@keyframes glyph-c {
+  0%   { content: "R"; } 16% { content: "j"; } 33% { content: "v"; }
+  50%  { content: "q"; } 66% { content: "W"; } 83% { content: "b"; } 100% { content: "x"; }
+}
+@keyframes glyph-d {
+  0%   { content: "z"; } 16% { content: "X"; } 33% { content: "n"; }
+  50%  { content: "m"; } 66% { content: "G"; } 83% { content: "T"; } 100% { content: "e"; }
+}
+
+// wave sweep — shared by every placeholder bar
+@keyframes skel-wave {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
 }
 
 .bl {
