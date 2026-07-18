@@ -63,7 +63,7 @@ pub fn Terminal() -> impl IntoView {
                 {stats_view}
             </Suspense>
             <div>
-                <span aria_hidden="true"><span>"$"</span><span class="caret"></span></span>
+                <span aria_hidden="true"><span>"$\u{00A0}"</span><span class="caret"></span></span>
                 <label for="cmd-input" class="sr-only">Terminal command</label>
                 <input id="cmd-input" type="text" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" disabled/>
             </div>
