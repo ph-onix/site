@@ -1,22 +1,24 @@
-use crate::{api::repo_state::Commit, app::Icon};
+use crate::api::repo_state::Commit;
+use crate::app::Icon;
 use chrono::{DateTime, Utc};
 use leptos::prelude::*;
-use std::sync::Arc;
 
 #[server]
-async fn list_commits() -> Result<Vec<Commit>, ServerFnError> {
-    let mut cache = expect_context::<crate::api::repo_cache::RepoCache>();
-    cache
-        .commits(None, 7)
-        .await
-        .map_err(|e| ServerFnError::new(e.to_string()))
+async fn list_commits(limit: usize) -> Result<Vec<Commit>, ServerFnError> {
+    use std::sync::{Arc, RwLock};
+    let ssr_state = expect_context::<Arc<RwLock<crate::api::SSRState>>>();
+    let commits = &ssr_state
+        .read()
+        .map_err(|e| ServerFnError::new(e.to_string()))?
+        .commits;
+    Ok(commits.iter().take(limit).cloned().collect())
 }
 
 #[component]
 pub fn BuildLog() -> impl IntoView {
     let commits = Resource::new(
         || (),
-        |_| async move { list_commits().await.map(|v| Arc::new(v)) },
+        |_| async move { list_commits(7).await },
     );
     let commit_view = move || {
         Suspend::new(async move {
@@ -26,14 +28,14 @@ pub fn BuildLog() -> impl IntoView {
                         return Fallback().into_any();
                     }
                     let v = v
-                    .iter()
+                    .into_iter()
                     .map(|c| {
                         view! {
                             <Entry 
                                 repo_name=c.repo_name.clone()
                                 href=format!("https://api.github.com/repos/ph-onix/{}/commits/{}", c.repo_name, c.id)
-                                message=c.message.clone()
-                                timestamp=c.timestamp.clone()
+                                message=c.message
+                                timestamp=c.timestamp
                             />
                         }
                     })

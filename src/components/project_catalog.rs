@@ -3,15 +3,16 @@ use crate::app::Icon;
 use chrono::{DateTime, Utc};
 use leptos::either::Either;
 use leptos::prelude::*;
-use std::sync::Arc;
 
 #[server]
 async fn list_repos() -> Result<Vec<RepoState>, ServerFnError> {
-    let mut cache = expect_context::<crate::api::repo_cache::RepoCache>();
-    cache
-        .repos(None)
-        .await
-        .map_err(|e| ServerFnError::new(e.to_string()))
+    use std::sync::{Arc, RwLock};
+    let ssr_state = expect_context::<Arc<RwLock<crate::api::SSRState>>>();
+    let repos = &ssr_state
+        .read()
+        .map_err(|e| ServerFnError::new(e.to_string()))?
+        .repos;
+    Ok(repos.clone())
 }
 
 #[component]
@@ -19,10 +20,7 @@ pub fn ProjectCatalog() -> impl IntoView {
     // Each repo is planned to expose a webhook the server will use to cache the most recent state in Redis.
     // a row is any set of ProjectCards that have col_spans that sum to 12 or don't specify a col_span
 
-    let repos = Resource::new(
-        || (),
-        |_| async move { list_repos().await.map(|v| Arc::new(v)) },
-    );
+    let repos = Resource::new(|| (), |_| async move { list_repos().await });
     let repo_view = move || {
         Suspend::new(async move {
             match repos.await {
@@ -38,16 +36,16 @@ pub fn ProjectCatalog() -> impl IntoView {
                         _ => vec![6, 6, 4, 4, 4],
                     };
                     let view = spans
-                        .iter()
-                        .zip(v.iter())
-                        .map(|(&col_span, r)| {
+                        .into_iter()
+                        .zip(v.into_iter())
+                        .map(|(col_span, r)| {
                             view! {
                                 <li>
                                     <ProjectCard
                                         name=r.name.clone()
                                         href=format!("/{}", r.name)
-                                        last_change_utc=r.head_commit.as_ref().map(|r| r.timestamp.clone())
-                                        description=r.description.clone()
+                                        last_change_utc=r.head_commit.map(|r| r.timestamp)
+                                        description=r.description
                                         col_span
                                     />
                                 </li>

@@ -5,11 +5,15 @@ async fn main() {
     use leptos::logging::log;
     use leptos::prelude::*;
     use leptos_axum::{LeptosRoutes, generate_route_list};
-    use site::api::{repo_cache::RepoCache, routes::routes};
+    use site::api;
+    use site::api::SSRState;
+    use site::api::repo_cache::RepoCache;
     use site::app::{App, shell};
+    use std::sync::{Arc, RwLock};
 
-    let cache_conn = RepoCache::new().await;
-    let leptos_cache_conn = cache_conn.clone();
+    let cach_conn = RepoCache::new().await;
+    let ssr_state = Arc::new(RwLock::new(SSRState::new(cach_conn.clone()).await.unwrap()));
+    let ssr_state_leptos = ssr_state.clone();
 
     let conf = get_configuration(None).unwrap();
     let addr = conf.leptos_options.site_addr;
@@ -19,7 +23,7 @@ async fn main() {
         .leptos_routes_with_context(
             &leptos_options,
             frontend_routes,
-            move || provide_context(leptos_cache_conn.clone()),
+            move || provide_context(ssr_state_leptos.clone()), // why do we have to clone twice ?
             {
                 let leptos_options = leptos_options.clone();
                 move || shell(leptos_options.clone())
@@ -27,7 +31,7 @@ async fn main() {
         )
         .fallback(leptos_axum::file_and_error_handler(shell))
         .with_state(leptos_options);
-    let app = app.nest("/api", routes(cache_conn.clone()));
+    let app = app.nest("/api", api::routes(cach_conn, ssr_state).await);
 
     // `axum::Server` is a re-export of `hyper::Server`
     log!("listening on http://{}", &addr);
