@@ -107,17 +107,15 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --dur: 0.3s;
 
-  // project-card entrance — cards resolve out of blur when the skeleton clears
+  // project-card entrance — cards rise + fade in when the skeleton clears
   --pcard-dur:     0.55s;
   --pcard-rise:    8px;
-  --pcard-blur:    6px;
   --pcard-stagger: 55ms;
 
-  // build-log entrance — log rows resolve out of blur when the skeleton clears.
+  // build-log entrance — log rows rise + fade in when the skeleton clears.
   // Tighter than the cards: rows are lighter, so a shorter throw + faster cadence.
   --blog-dur:     0.5s;
   --blog-rise:    6px;
-  --blog-blur:    5px;
   --blog-stagger: 45ms;
 }
 
@@ -541,6 +539,7 @@ body {
     > li {
       display: flex;
       flex-direction: column;
+      align-items: flex-start;   // keep a ch-width command span from stretching
       gap: var(--s2);
 
       // hairline separator between closed transactions
@@ -549,10 +548,12 @@ body {
         padding-top: var(--s3);
       }
 
-      > span:first-child { color: var(--fg-muted); }  // command — de-emphasised
-      > span:last-child  { color: var(--fg); }         // single-line output
+      // command line — the only direct <span>; de-emphasised
+      > span { color: var(--fg-muted); }
 
-      // multi-line output (git log)
+      // output block — one shape for every row: a single stats line or a
+      // three-row git log are the same <div> of row <span>s, so nothing keys
+      // off sibling position and transactions can be reordered freely
       > div {
         display: flex;
         flex-direction: column;
@@ -560,14 +561,14 @@ body {
 
         > span {
           display: block;
-          span { color: var(--fg-subtle); }  // commit hash
+          span { color: var(--fg-subtle); }  // leading commit hash, when present
         }
       }
     }
   }
 
-  // open transaction — active prompt row
-  &-prompt {
+  // open transaction — the live prompt row (the direct <div> that isn't the seam)
+  > div:not([aria-hidden]) {
     display: flex;
     align-items: center;
     gap: var(--s2);
@@ -576,7 +577,12 @@ body {
     border-top: 1px solid var(--border);
     padding-top: var(--s3);
 
-    > span { color: var(--fg-muted); }  // sigil
+    // prompt-head — sigil + caret ride together as one unit; sigil de-emphasised
+    > span {
+      display: inline-flex;
+      align-items: center;
+      color: var(--fg-muted);
+    }
 
     input {
       flex: 1;
@@ -588,8 +594,152 @@ body {
       font-size: inherit;
       caret-color: var(--fg);
     }
+
+    // live caret blinks until the field takes focus, then hands off to the
+    // native text caret
+    .caret { animation: caret-blink 1.1s step-end infinite; }
+    &:focus-within .caret { display: none; }
   }
 }
+
+// block cursor — exactly one monospace cell, shared by every caret on the
+// surface so each renders the same rectangle. Idle command carets rest hidden
+// (opacity 0); the live prompt lights and blinks its own via the rule above.
+.caret {
+  flex: none;
+  display: inline-block;
+  width: 1ch;
+  height: 1.15em;
+  background: var(--fg);
+  opacity: 0;
+}
+
+// ready-prompt blink — one on/off cycle per iteration, resting "on" at cycle end
+@keyframes caret-blink {
+  0%   { opacity: 1; }
+  50%  { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .term .caret { animation: none; }  // no blink; native text caret still shows on focus
+}
+
+// ============================================================================
+// .term render choreography — the terminal writes itself out on first paint.
+//
+// `term-render` alongside `term` is the only switch; without it the terminal is
+// static. The sequence: the seam resolves out of blur, each command line is
+// typed character-by-character with a caret riding the end, its output resolves
+// out of blur (reusing the build-log's blur-resolve so both surfaces share one
+// entrance language), then the live prompt lands and its caret beats three slow
+// blinks before resting lit. Everything fires on node insertion — no JS.
+//
+// The terminal reserves its full height from frame one (blur-resolve animates
+// opacity/transform/filter, never layout), so content resolves into space that
+// is already held and nothing reflows.
+// ============================================================================
+.term-render {
+  // isolate the write-out from the rest of the document. The reveal is
+  // composited-only (opacity / transform / clip-path — no width, no blur), so
+  // it costs almost nothing; paint containment keeps whatever repaint it does
+  // trigger inside the terminal, off the frames where the cards are entering.
+  contain: layout paint;
+
+  --tt:        34ms;         // per-character type speed (monospace → 1ch per step)
+  --t-seam:     0ms;
+  --t-cmd1:   300ms;
+  --t-out1:   780ms;
+  --t-row2:   980ms;
+  --t-cmd2:  1040ms;
+  --t-out2:  1820ms;
+  --t-live:  2300ms;
+  --t-caret: var(--t-live);  // caret lights with the row so sigil + caret resolve in together
+  --caret-beat: 1.15s;       // one slow blink cycle of the ready prompt
+  --out-dur: 0.45s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  // seam — icon + hairline rise in
+  .term-render > [aria-hidden] {
+    animation: term-rise var(--out-dur) var(--ease-out) var(--t-seam) backwards;
+  }
+
+  // command line — the text is revealed left→right by a stepped clip-path (no
+  // width animation, so no per-step layout); a caret rides the reveal edge via
+  // transform. `backwards` holds the line fully clipped until its turn.
+  .term-render > ol > li > span {
+    display: inline-flex;
+    align-items: center;
+
+    > span:first-child {
+      overflow: hidden;
+      white-space: nowrap;
+      clip-path: inset(0 0 0 0);   // rest state — fully revealed
+    }
+  }
+  .term-render > ol > li:nth-child(1) > span > span:first-child {
+    animation: term-type calc(12 * var(--tt)) steps(12) var(--t-cmd1) backwards;
+  }
+  .term-render > ol > li:nth-child(2) > span > span:first-child {
+    animation: term-type calc(22 * var(--tt)) steps(22) var(--t-cmd2) backwards;
+  }
+
+  // caret rides the reveal edge (translateX only — composited), then leaves.
+  // --ride is the line's full width, so it steps from the first cell to the last
+  // in lockstep with the clip, always sitting just past the newest glyph.
+  .term-render > ol > li:nth-child(1) > span > .caret {
+    --ride: -12ch;
+    animation: term-typecaret calc(12 * var(--tt)) steps(12) var(--t-cmd1);
+  }
+  .term-render > ol > li:nth-child(2) > span > .caret {
+    --ride: -22ch;
+    animation: term-typecaret calc(22 * var(--tt)) steps(22) var(--t-cmd2);
+  }
+
+  // hold the second transaction — incl. its top hairline — until the first
+  // line has finished writing
+  .term-render > ol > li:nth-child(2) {
+    animation: term-appear 0.3s var(--ease-out) var(--t-row2) backwards;
+  }
+
+  // outputs rise in once their command lands
+  .term-render > ol > li:nth-child(1) > div {
+    animation: term-rise var(--out-dur) var(--ease-out) var(--t-out1) backwards;
+  }
+  // git log — three rows rise in a short stagger
+  .term-render > ol > li:nth-child(2) > div > span {
+    animation: term-rise var(--out-dur) var(--ease-out) backwards;
+
+    &:nth-child(1) { animation-delay: var(--t-out2); }
+    &:nth-child(2) { animation-delay: calc(var(--t-out2) + 90ms); }
+    &:nth-child(3) { animation-delay: calc(var(--t-out2) + 180ms); }
+  }
+
+  // live prompt rises in last, then its caret beats three slow blinks and rests
+  // lit (forwards holds the final on-frame). Overrides .term's idle infinite
+  // blink while the class is present (same specificity, later in source).
+  .term-render > div:not([aria-hidden]) {
+    animation: term-rise 0.4s var(--ease-out) var(--t-live) backwards;
+
+    .caret { animation: caret-blink var(--caret-beat) step-end var(--t-caret) 3 forwards; }
+  }
+}
+
+// reveal by stepped clip — no layout; the omitted 100% inherits the base inset
+@keyframes term-type { from { clip-path: inset(0 100% 0 0); } }
+
+// typing caret — solid, riding the reveal edge; opacity 0 base hides it before
+// and after its window (no fill), transform carries it across
+@keyframes term-typecaret {
+  from { opacity: 1; transform: translateX(var(--ride)); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+// output / row reveal — opacity + rise, no blur, so the terminal never touches
+// the compositor's filter budget while the cards are rendering theirs
+@keyframes term-rise   { from { opacity: 0; transform: translateY(6px); } }
+@keyframes term-appear { from { opacity: 0; } to { opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
   .crumbs a,
@@ -624,10 +774,9 @@ body {
     // lone card fills the full row
     > li:only-child > a { grid-column: 1 / -1; }
 
-    // entrance — each card resolves out of blur as <Suspense> swaps the
-    // skeleton for the real <ul>. Fires on node insertion (no JS); `backwards`
-    // fill holds staggered cards at the hidden `from` frame until their turn
-    // and leaves no lingering filter once each settles.
+    // entrance — each card rises + fades in as <Suspense> swaps the skeleton
+    // for the real <ul>. Fires on node insertion (no JS); `backwards` fill holds
+    // staggered cards at the hidden `from` frame until their turn.
     > li > a {
       animation: pcard-in var(--pcard-dur) var(--ease-out) backwards;
     }
@@ -749,20 +898,12 @@ body {
   }
 }
 
-// project-card entrance — resolve out of blur (paired with .pcatalog > ul > li > a).
-// Not fill-forwards on purpose: the card reverts to its own styles after, so no
-// stray filter is left creating a containing block over the settled cards.
+// project-card entrance — rise + fade (paired with .pcatalog > ul > li > a).
+// Opacity + transform only (no filter): a blurred layer that tears down at the
+// animation's end re-rasterises the card and flickers, so the reveal stays
+// compositor-only, matching the terminal's fade-in.
 @keyframes pcard-in {
-  from {
-    opacity: 0;
-    transform: translateY(var(--pcard-rise));
-    filter: blur(var(--pcard-blur));
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: blur(0);
-  }
+  from { opacity: 0; transform: translateY(var(--pcard-rise)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -999,10 +1140,9 @@ body {
       &:last-child { border-bottom: none; }
       &:hover { background: var(--surface-1); }
 
-      // entrance — each row resolves out of blur as the real <ol> replaces the
+      // entrance — each row rises + fades in as the real <ol> replaces the
       // skeleton. Fires on node insertion (no JS); `backwards` fill holds
-      // staggered rows at the hidden `from` frame until their turn, and leaves
-      // no lingering filter (not forwards) that would create a containing block.
+      // staggered rows at the hidden `from` frame until their turn.
       animation: blog-in var(--blog-dur) var(--ease-out) backwards;
 
       &:nth-child(1) { animation-delay: calc(0 * var(--blog-stagger)); }
@@ -1062,20 +1202,12 @@ body {
   }
 }
 
-// build-log entrance — resolve out of blur (paired with .bl > ol > li).
-// Not fill-forwards on purpose: the row reverts to its own styles after, so no
-// stray filter is left creating a containing block over the settled rows.
+// build-log entrance — rise + fade (paired with .bl > ol > li).
+// Opacity + transform only (no filter), matching the cards and terminal: a
+// blurred layer that tears down at the animation's end re-rasterises the row
+// and flickers, so the reveal stays compositor-only.
 @keyframes blog-in {
-  from {
-    opacity: 0;
-    transform: translateY(var(--blog-rise));
-    filter: blur(var(--blog-blur));
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: blur(0);
-  }
+  from { opacity: 0; transform: translateY(var(--blog-rise)); }
 }
 
 // build log — pre-hydration skeleton
