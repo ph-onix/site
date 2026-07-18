@@ -9,10 +9,9 @@ async fn stats() -> Result<(usize, String, Vec<Commit>), ServerFnError> {
     let ssr_state = ssr_state
         .read()
         .map_err(|e| ServerFnError::new(e.to_string()))?;
-    let last_change = ssr_state
-        .commits
-        .get(0)
-        .map_or_default(|v| v.timestamp.format("%b %d").to_string());
+    let last_change = ssr_state.commits.get(0).map_or("unknown".to_string(), |v| {
+        v.timestamp.format("%b %d").to_string()
+    });
     let commits = ssr_state.commits.iter().take(3).cloned().collect();
     Ok((ssr_state.repos.len(), last_change, commits))
 }
