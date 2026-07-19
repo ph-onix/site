@@ -4,7 +4,7 @@ use serde::Deserialize;
 use std::env;
 use thiserror::Error;
 use tokio::sync::{broadcast, mpsc::unbounded_channel};
-use uuid::Uuid;
+// use uuid::Uuid;
 
 #[derive(Debug, Error)]
 pub enum CachingError {
@@ -25,7 +25,7 @@ pub enum CachingError {
 pub struct RepoCache {
     client: redis::aio::MultiplexedConnection,
     broadcast: broadcast::Sender<String>,
-    pub id: Uuid,
+    // pub id: Uuid,
 }
 
 #[derive(Deserialize)]
@@ -54,20 +54,16 @@ impl RepoCache {
         tokio::spawn(async move {
             while let Some(push) = rx.recv().await {
                 if let Some(msg) = Msg::from_push_info(push) {
-                    match msg.get_payload::<String>() {
-                        Ok(sender) => {
-                            let _ = broadcaster.send(sender);
+                    match msg.get_channel() {
+                        Ok(channel) => {
+                            let _ = broadcaster.send(channel);
                         }
                         _ => continue,
                     }
                 }
             }
         });
-        Self {
-            client,
-            broadcast,
-            id: Uuid::new_v4(),
-        }
+        Self { client, broadcast }
     }
 
     /// Get a subset of every cached RepoState.
@@ -188,7 +184,7 @@ impl RepoCache {
                 .ignore()
                 .zremrangebyrank(&commit_log, cap_index, -1)
                 .ignore()
-                .publish(&repo_channel, self.id.to_string())
+                .publish(&repo_channel, 0)
                 .query_async(&mut (*self).client)
                 .await?;
         } else {
@@ -208,19 +204,21 @@ impl RepoCache {
         Fut: Future<Output = ()> + Send + 'static,
     {
         match id {
-            Some(v) => self.client.subscribe(format!("repos:states:{}", v)).await,
-            _ => self.client.psubscribe("repos:states:*").await,
+            Some(v) => {
+                let channel = format!("repos:states:{}", v);
+                self.client.subscribe(&channel).await
+            }
+            _ => {
+                let channel = "repos:states:*".to_string();
+                self.client.psubscribe(&channel).await
+            }
         }
-        .expect("failed to subscribe");
+        .expect(&format!("failed to subsribe to repo id {:?}", id));
 
-        let conn_id = self.id.to_string();
         let mut rx = self.broadcast.subscribe();
         tokio::spawn(async move {
-            while let Ok(sender) = rx.recv().await {
-                if sender != conn_id {
-                    println!("{} got a message from {}", conn_id, sender);
-                    f().await;
-                }
+            while let Ok(_) = rx.recv().await {
+                f().await;
             }
         });
     }

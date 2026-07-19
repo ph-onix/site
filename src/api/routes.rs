@@ -61,6 +61,7 @@ pub async fn routes(mut cache_conn: RepoCache, ssr_state: Arc<RwLock<SSRState>>)
             }
         })
         .await;
+
     Router::new()
         .route("/webhooks/github", post(repo_push_event))
         .with_state(HandlerState {
@@ -88,14 +89,5 @@ async fn repo_push_event(
         println!("{:?}", e);
         return StatusCode::INTERNAL_SERVER_ERROR;
     }
-    match SSRState::new(state.cache_conn).await {
-        Some(refresh) => match state.ssr_state.write() {
-            Ok(mut current) => {
-                *current = refresh;
-                StatusCode::NO_CONTENT
-            }
-            _ => StatusCode::INTERNAL_SERVER_ERROR,
-        },
-        _ => StatusCode::INTERNAL_SERVER_ERROR,
-    }
+    StatusCode::NO_CONTENT
 }
