@@ -1,8 +1,10 @@
 use crate::api::repo_state::{Commit, Repo, RepoState};
-use redis::{AsyncCommands, RedisError};
+use redis::{AsyncCommands, Msg, RedisError};
 use serde::Deserialize;
 use std::env;
 use thiserror::Error;
+use tokio::sync::{broadcast, mpsc::unbounded_channel};
+use uuid::Uuid;
 
 #[derive(Debug, Error)]
 pub enum CachingError {
@@ -22,6 +24,8 @@ pub enum CachingError {
 #[derive(Clone)]
 pub struct RepoCache {
     client: redis::aio::MultiplexedConnection,
+    broadcast: broadcast::Sender<String>,
+    pub id: Uuid,
 }
 
 #[derive(Deserialize)]
@@ -36,13 +40,34 @@ pub struct PushEvent {
 impl RepoCache {
     /// Connect to the data store you want to cache github webhook info in.
     pub async fn new() -> Self {
+        let (redis_pubs, mut rx) = unbounded_channel();
+        let config = redis::AsyncConnectionConfig::new().set_push_sender(redis_pubs);
         let redis_url = env::var("REDIS_URL").expect("envvar REDIS_URL");
         let client = redis::Client::open(redis_url)
             .expect("failed to connect to redis")
-            .get_multiplexed_async_connection()
+            .get_multiplexed_async_connection_with_config(&config)
             .await
-            .expect("failed to create MultiplexecConnection");
-        Self { client }
+            .expect("failed to connect to redis");
+
+        let (broadcast, _) = broadcast::channel(256);
+        let broadcaster = broadcast.clone();
+        tokio::spawn(async move {
+            while let Some(push) = rx.recv().await {
+                if let Some(msg) = Msg::from_push_info(push) {
+                    match msg.get_payload::<String>() {
+                        Ok(sender) => {
+                            let _ = broadcaster.send(sender);
+                        }
+                        _ => continue,
+                    }
+                }
+            }
+        });
+        Self {
+            client,
+            broadcast,
+            id: Uuid::new_v4(),
+        }
     }
 
     /// Get a subset of every cached RepoState.
@@ -149,6 +174,7 @@ impl RepoCache {
 
             let repo_commit_log = format!("commits:{}", repo_id);
             let commit_log = "commits";
+            let repo_channel = format!("repos:states:{}", repo_id);
             let cap_index = cap - 1;
             let _: () = redis::pipe()
                 .atomic()
@@ -162,12 +188,41 @@ impl RepoCache {
                 .ignore()
                 .zremrangebyrank(&commit_log, cap_index, -1)
                 .ignore()
+                .publish(&repo_channel, self.id.to_string())
                 .query_async(&mut (*self).client)
                 .await?;
         } else {
             return Err(CachingError::UnknownEvent);
         };
         Ok(())
+    }
+
+    /// On any repo state change made by another RepoCache instance
+    /// `f` will be called as a background task.
+    ///
+    /// If provided an id I will watch that repo's channel otherwise I will watch
+    /// every repo state change.
+    pub async fn repo_subscribe<F, Fut>(&mut self, id: Option<u64>, mut f: F)
+    where
+        F: FnMut() -> Fut + Send + 'static,
+        Fut: Future<Output = ()> + Send + 'static,
+    {
+        match id {
+            Some(v) => self.client.subscribe(format!("repos:states:{}", v)).await,
+            _ => self.client.psubscribe("repos:states:*").await,
+        }
+        .expect("failed to subscribe");
+
+        let conn_id = self.id.to_string();
+        let mut rx = self.broadcast.subscribe();
+        tokio::spawn(async move {
+            while let Ok(sender) = rx.recv().await {
+                if sender != conn_id {
+                    println!("{} got a message from {}", conn_id, sender);
+                    f().await;
+                }
+            }
+        });
     }
 }
 

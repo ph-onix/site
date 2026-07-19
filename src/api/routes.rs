@@ -37,13 +37,36 @@ impl FromRef<HandlerState> for RepoCache {
     }
 }
 
-pub async fn routes(cache_conn: RepoCache, ssr_state: Arc<RwLock<SSRState>>) -> Router<()> {
+pub async fn routes(mut cache_conn: RepoCache, ssr_state: Arc<RwLock<SSRState>>) -> Router<()> {
+    let async_lock = Arc::new(Mutex::new(()));
+    let c = cache_conn.clone();
+    let s = ssr_state.clone();
+    let l = async_lock.clone();
+    cache_conn
+        .repo_subscribe(None, move || {
+            let c = c.clone();
+            let s = s.clone();
+            let l = l.clone();
+            async move {
+                let _lock = l.lock().await;
+                match SSRState::new(c).await {
+                    Some(refresh) => match s.write() {
+                        Ok(mut v) => {
+                            *v = refresh;
+                        }
+                        _ => (),
+                    },
+                    _ => (),
+                }
+            }
+        })
+        .await;
     Router::new()
         .route("/webhooks/github", post(repo_push_event))
         .with_state(HandlerState {
-            cache_conn,
-            ssr_state,
-            async_lock: Arc::new(Mutex::new(())),
+            cache_conn: cache_conn.clone(),
+            ssr_state: ssr_state.clone(),
+            async_lock: async_lock.clone(),
         })
 }
 
