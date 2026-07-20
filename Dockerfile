@@ -9,14 +9,14 @@ COPY . .
 RUN rustup target add wasm32-unknown-unknown
 RUN cargo leptos build --release -vv
 
-FROM rustlang/rust:nightly-bookworm as runtime
+FROM debian:bookworm-slim as runtime
 COPY --from=builder /app/target/release/site /app/bin
 COPY --from=builder /app/target/site /app/site
 WORKDIR /app
 
 ENV RUST_LOG="info"
 ENV LEPTOS_SITE_ROOT="site"
-ENV LEPTOS_SITE_PKG_DIR=pkg
+ENV LEPTOS_SITE_PKG_DIR="pkg"
 ENV LEPTOS_SITE_ADDR=0.0.0.0:8080
 
 EXPOSE 8080
