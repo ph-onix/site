@@ -4,7 +4,6 @@ use serde::Deserialize;
 use std::env;
 use thiserror::Error;
 use tokio::sync::{broadcast, mpsc::unbounded_channel};
-// use uuid::Uuid;
 
 #[derive(Debug, Error)]
 pub enum CachingError {
@@ -25,7 +24,6 @@ pub enum CachingError {
 pub struct RepoCache {
     client: redis::aio::MultiplexedConnection,
     broadcast: broadcast::Sender<String>,
-    // pub id: Uuid,
 }
 
 #[derive(Deserialize)]
@@ -98,7 +96,7 @@ impl RepoCache {
         }
     }
 
-    /// Get up to the cache limit of the most recent commits from a repo in chronological order.
+    /// Get up to the cache limit of the most recent commits from a repo in reverse chronological order.
     ///
     /// If no repo ids are provided I will give you a repo agnostic commits in chronological order.
     pub async fn commits(
@@ -109,14 +107,18 @@ impl RepoCache {
         let limit_index = limit - 1;
         match ids {
             Some(v) => {
+                if v.len() == 0 {
+                    return Ok(vec![]);
+                }
                 let commits = v
                     .iter()
                     .fold(&mut redis::pipe(), |p, id| {
                         p.zrange(format!("commits:{id}"), 0, limit_index)
                     })
-                    .query_async::<Vec<String>>(&mut self.client)
+                    .query_async::<Vec<Vec<String>>>(&mut self.client)
                     .await?
                     .iter()
+                    .flatten()
                     .filter_map(|s| serde_json::from_str(&s).ok())
                     .collect();
                 Ok(commits)
@@ -219,8 +221,10 @@ impl RepoCache {
 
         let mut rx = self.broadcast.subscribe();
         tokio::spawn(async move {
-            while let Ok(_) = rx.recv().await {
-                f().await;
+            loop {
+                if let Ok(_) = rx.recv().await {
+                    f().await;
+                }
             }
         });
     }

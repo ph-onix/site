@@ -1,12 +1,17 @@
-use crate::api::repo_state::{Commit, RepoState};
-
 use super::repo_cache::RepoCache;
+use crate::api::repo_state::{Commit, RepoState};
 use axum::Router;
 use axum::extract::State;
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::{HeaderMap, StatusCode, header};
 use axum::routing::post;
+use hex;
+use hmac::{Hmac, KeyInit, Mac};
+use sha2::Sha256;
+use std::env;
 use std::sync::{Arc, RwLock};
 use tokio;
+
+type HmacSha256 = Hmac<Sha256>;
 
 pub struct SSRState {
     pub repos: Vec<RepoState>,
@@ -62,16 +67,38 @@ async fn repo_push_event(
     headers: HeaderMap,
     State(mut r): State<RepoCache>,
     body: String,
-) -> StatusCode {
-    let content_type = headers
-        .get("Content-Type")
-        .map_or_default(|v| v.to_str().unwrap_or_default());
-    if content_type != "application/json" {
-        return StatusCode::NOT_ACCEPTABLE;
-    }
-    if let Err(e) = r.set_event(body).await {
+) -> Result<StatusCode, StatusCode> {
+    headers
+        .get(header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .ok_or_else(|| StatusCode::BAD_REQUEST)?
+        .starts_with("application/json")
+        .ok_or_else(|| StatusCode::BAD_REQUEST)?;
+    headers
+        .get("X-GitHub-Event")
+        .and_then(|v| v.to_str().ok())
+        .ok_or_else(|| StatusCode::BAD_REQUEST)?
+        .starts_with("push")
+        .ok_or_else(|| StatusCode::BAD_REQUEST)?;
+
+    let xhub_sig = headers
+        .get("X-Hub-Signature-256")
+        .and_then(|v| v.to_str().ok())
+        .ok_or_else(|| StatusCode::BAD_REQUEST)?
+        .strip_prefix("sha256=")
+        .ok_or_else(|| StatusCode::BAD_REQUEST)?;
+    let xhub_sig = hex::decode(xhub_sig).map_err(|_| StatusCode::BAD_REQUEST)?;
+    let webhook_secret = env::var("WEBHOOK_SECRET").expect("envvar WEBHOOK_SECRET");
+
+    let mut mac = HmacSha256::new_from_slice(webhook_secret.as_bytes())
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    mac.update(body.as_bytes());
+    mac.verify_slice(&xhub_sig)
+        .map_err(|_| StatusCode::BAD_REQUEST)?;
+
+    r.set_event(body).await.map_err(|e| {
         println!("{:?}", e);
-        return StatusCode::INTERNAL_SERVER_ERROR;
-    }
-    StatusCode::NO_CONTENT
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    Ok(StatusCode::NO_CONTENT)
 }
