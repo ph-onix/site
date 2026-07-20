@@ -7,12 +7,9 @@ async fn main() {
     use leptos_axum::{LeptosRoutes, generate_route_list};
     use site::api;
     use site::api::SSRState;
-    use site::api::repo_cache::RepoCache;
     use site::app::{App, shell};
-    use std::sync::{Arc, RwLock};
 
-    let cach_conn = RepoCache::new().await;
-    let ssr_state = Arc::new(RwLock::new(SSRState::new(cach_conn.clone()).await.unwrap()));
+    let ssr_state = SSRState::new();
     let ssr_state_leptos = ssr_state.clone();
 
     let conf = get_configuration(None).unwrap();
@@ -31,7 +28,7 @@ async fn main() {
         )
         .fallback(leptos_axum::file_and_error_handler(shell))
         .with_state(leptos_options);
-    let app = app.nest("/api", api::routes(cach_conn, ssr_state).await);
+    let app = app.nest("/api", api::routes(ssr_state).await);
 
     // `axum::Server` is a re-export of `hyper::Server`
     log!("listening on http://{}", &addr);

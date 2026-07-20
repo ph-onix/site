@@ -53,13 +53,14 @@ impl RepoCache {
         let broadcaster = broadcast.clone();
         tokio::spawn(async move {
             while let Some(push) = rx.recv().await {
-                if let Some(msg) = Msg::from_push_info(push) {
-                    match msg.get_channel() {
+                match Msg::from_push_info(push) {
+                    Some(msg) => match msg.get_channel() {
                         Ok(channel) => {
                             let _ = broadcaster.send(channel);
                         }
                         _ => continue,
-                    }
+                    },
+                    _ => continue,
                 }
             }
         });
@@ -133,7 +134,8 @@ impl RepoCache {
         }
     }
 
-    /// Update a repo state and the commit log in response to a webhook event.
+    /// Update a repo state and the commit log in response to a webhook event and notify
+    /// any subscribers.
     ///
     /// I will delete existing values in the cache.
     ///
